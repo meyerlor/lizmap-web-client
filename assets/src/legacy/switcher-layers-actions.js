@@ -274,43 +274,42 @@ var lizLayerActionButtons = function() {
                     // Set theme as active
                     $('#theme-selector button').removeClass('active');
                     $(this).addClass('active');
-
+                
                     const themeNameSelected = $(this).text();
-
-                    if (themeNameSelected in lizMap.config.themes){
+                
+                    if (themeNameSelected in lizMap.config.themes) {
                         const themeSelected = lizMap.config.themes[themeNameSelected];
-
+                
                         // Groups and subgroups are separated by a '/'. We only keep deeper groups
                         const checkedGroups = themeSelected?.checkedGroupNode?.map(groupNode => groupNode.split('/').slice(-1)[0]) || [];
                         const expandedGroups = themeSelected?.expandedGroupNode?.map(groupNode => groupNode.split('/').slice(-1)[0]) || [];
                         const expandedLegendNodes = themeSelected?.expandedLegendNode || [];
-
+                
                         // Set checked and expanded states
                         for (const layerOrGroup of lizMap.mainLizmap.state.layerTree.findTreeLayersAndGroups()) {
-                            // Groups in theme are based on QGIS group (so groupAsLayer is not a layer but a group)
                             if (layerOrGroup.mapItemState.itemState.type === "group") {
                                 layerOrGroup.checked = checkedGroups.includes(layerOrGroup.name);
                                 layerOrGroup.expanded = expandedGroups.includes(layerOrGroup.name);
                             } else {
                                 const layerParams = themeSelected?.layers?.[layerOrGroup.layerConfig.id];
                                 if (!layerParams) {
-                                    layerOrGroup.checked = false;
+                                    // Leave the layer's checked state as-is if not defined in the theme
                                     continue;
                                 }
-
+                
                                 const style = layerParams?.style;
                                 if (style) {
                                     layerOrGroup.wmsSelectedStyleName = style;
                                 }
-
+                
+                                // Set the layer as checked independently of its group
                                 layerOrGroup.checked = true;
+                
+                                // Apply expanded state if defined
                                 layerOrGroup.expanded = layerParams?.expanded === "1" || layerParams?.expanded === true;
-
-                                // `symbologyChildren` is empty for some time if the theme switches
-                                // the layer style from simple to categorized.
-                                // TODO: avoid this hack
+                
+                                // Handle expanded legend states
                                 setTimeout(() => {
-                                    // Handle expanded legend states
                                     const symbologyChildren = layerOrGroup.symbologyChildren;
                                     if (symbologyChildren.length) {
                                         for (const symbol of symbologyChildren) {
@@ -318,10 +317,18 @@ var lizLayerActionButtons = function() {
                                         }
                                     }
                                 }, 1000);
-
                             }
                         }
-
+                
+                        // Trigger map theme event
+                        lizMap.events.triggerEvent("mapthemechanged",
+                            {
+                                'name': themeNameSelected,
+                                'config': themeSelected
+                            }
+                        );
+                    }
+                });
                         // Set baseLayers checked state
                         if (themeSelected?.checkedGroupNode?.includes("baselayers/project-background-color")) {
                             lizMap.mainLizmap.state.baseLayers.selectedBaseLayerName = "project-background-color";
