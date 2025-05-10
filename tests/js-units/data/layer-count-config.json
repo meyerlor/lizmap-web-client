@@ -75,7 +75,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "grouped_points": {
             "id": "grouped_points_13b16dbe_509c_40b0_93a4_0c94bba36f1c",
@@ -109,7 +110,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "grouped_lines": {
             "id": "grouped_lines_d342c38f_dd65_4cfe_8801_2d753ed135d2",
@@ -143,7 +145,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "free_lines": {
             "id": "free_lines_ec1cd235_c48a_465e_bde4_adf242da56a6",
@@ -177,7 +180,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "free_points": {
             "id": "free_points_a85d6b9d_1e8b_462e_933e_237fb918400d",
@@ -211,7 +215,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "group_1": {
             "id": "group_1",
@@ -237,7 +242,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "group1_points": {
             "id": "group1_points_54db9e42_97d6_4241_9ae6_a491929125cc",
@@ -271,7 +277,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "group1_lines": {
             "id": "group1_lines_e3af681a_a501_4b5c_917c_4d8f5e4d918b",
@@ -305,7 +312,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "free_polygons": {
             "id": "free_polygons_0d052ea4_3f74_445f_b01f_3feef68e8bca",
@@ -339,7 +347,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "baselayers": {
             "id": "baselayers",
@@ -365,7 +374,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "baselayer_polygon": {
             "id": "baselayer_polygon_e5c8b39c_26d2_4252_8a93_8f6c818e0e93",
@@ -399,7 +409,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "OpenStreetMap": {
             "id": "OpenStreetMap_b472be12_05b7_4c9c_b89a_7010fb16bab7",
@@ -432,7 +443,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         }
     },
     "atlas": {

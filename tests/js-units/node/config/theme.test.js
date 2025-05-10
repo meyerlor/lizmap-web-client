@@ -28,11 +28,27 @@ describe('LayerThemeConfig', function () {
             expect(error.message).to.be.eq('The cfg parameter is not an Object!')
             expect(error).to.be.instanceOf(ValidationError)
         }
+
+        try {
+            new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "1" })
+        } catch (error) {
+            expect(error.name).to.be.eq('ValidationError')
+            expect(error.message).to.be.eq('The properties: `checked` are required in the cfg object!')
+            expect(error).to.be.instanceOf(ValidationError)
+        }
     })
 
     it('ConversionError', function () {
         try {
             new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "trust", "checked": true })
+        } catch (error) {
+            expect(error.name).to.be.eq('ConversionError')
+            expect(error.message).to.be.eq('`trust` is not an expected boolean: true, t, yes, y, 1, false, f, no, n, 0 or empty string ``!')
+            expect(error).to.be.instanceOf(ConversionError)
+        }
+
+        try {
+            new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "1", "checked": "trust" })
         } catch (error) {
             expect(error.name).to.be.eq('ConversionError')
             expect(error.message).to.be.eq('`trust` is not an expected boolean: true, t, yes, y, 1, false, f, no, n, 0 or empty string ``!')

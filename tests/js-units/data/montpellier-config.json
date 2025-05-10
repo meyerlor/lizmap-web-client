@@ -1448,19 +1448,23 @@
       "layers": {
         "SousQuartiers20160121124316563": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "donnes_sociodemo_sous_quartiers20160121144525075": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "publicbuildings20150420100958543": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "VilleMTP_MTP_Quartiers_2011_432620130116112610876": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         }
       },
       "expandedGroupNode": [
@@ -1477,27 +1481,33 @@
       "layers": {
         "SousQuartiers20160121124316563": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "donnes_sociodemo_sous_quartiers20160121144525075": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "publicbuildings20150420100958543": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "edition_polygon20130409114333776": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         },
         "edition_line20130409161630329": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         },
         "edition_point20130118171631518": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         }
       },
       "expandedGroupNode": [
@@ -1514,35 +1524,43 @@
       "layers": {
         "tramway20150328114206278": {
           "style": "black",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "donnes_sociodemo_sous_quartiers20160121144525075": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "tramway_ref20150612171109044": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "jointure_tram_stop20150328114216806": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "tramstop20150328114203878": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "tram_stop_work20150416102656130": {
           "style": "default",
-          "expanded": "1"
+          "expanded": "1",
+          "checked": true
         },
         "bus_stops20121106170806413": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         },
         "bus20121102133611751": {
           "style": "default",
-          "expanded": "0"
+          "expanded": "0",
+          "checked": true
         }
       },
       "expandedGroupNode": [

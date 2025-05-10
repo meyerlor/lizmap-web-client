@@ -30,7 +30,8 @@
         "serverFrame": null,
         "clientCacheExpiration": 300,
         "shortname": "group_with_space_in_name",
-        "mutuallyExclusive": "True"
+        "mutuallyExclusive": "True",
+        "checked": true
       },
       "quartiers": {
         "id": "quartiers_d4340dfd_5ee8_425d_83b7_2739f413adab",
@@ -67,7 +68,8 @@
         "serverFrame": null,
         "clientCacheExpiration": 300,
         "showFeatureCount": "True",
-        "layerType": "vector"
+        "layerType": "vector",
+        "checked": true
       },
       "shop_bakery_pg": {
         "id": "shop_bakery_pg_e9fe3037_8b88_49d3_bce7_f4937094d451",
@@ -103,7 +105,8 @@
         "cached": "False",
         "serverFrame": null,
         "clientCacheExpiration": 300,
-        "layerType": "vector"
+        "layerType": "vector",
+        "checked": true
       }
     },
     "timemanagerLayers": {},

@@ -27,7 +27,8 @@
             "imageFormat": "image/png",
             "cached": "False",
             "clientCacheExpiration": 300,
-            "shortname": "PostgreSQL"
+            "shortname": "PostgreSQL",
+            "checked": true
         },
         "townhalls_pg": {
             "id": "townhalls_pg_f97f7bce_29dc_469b_a5ef_baaf25ba1b31",
@@ -63,7 +64,8 @@
             "clientCacheExpiration": 300,
             "shortname": "townhalls_pg",
             "layerType": "vector",
-            "webDavFields": []
+            "webDavFields": [],
+            "checked": true
         },
         "shop_bakery_pg": {
             "id": "shop_bakery_pg_403084fe_041d_4ede_a2dc_cd9866a53623",
@@ -99,7 +101,8 @@
             "clientCacheExpiration": 300,
             "shortname": "shop_bakery_pg",
             "layerType": "vector",
-            "webDavFields": []
+            "webDavFields": [],
+            "checked": true
         },
         "group-without-children": {
             "id": "group-without-children",
@@ -126,7 +129,8 @@
             "cached": "False",
             "clientCacheExpiration": 300,
             "shortname": "group-without-children",
-            "cleanname": "group_without_children"
+            "cleanname": "group_without_children",
+            "checked": true
         },
         "Shapefiles": {
             "id": "Shapefiles",
@@ -152,7 +156,8 @@
             "imageFormat": "image/png",
             "cached": "False",
             "clientCacheExpiration": 300,
-            "shortname": "Shapefiles"
+            "shortname": "Shapefiles",
+            "checked": true
         },
         "POIs": {
             "id": "POIs",
@@ -178,7 +183,8 @@
             "imageFormat": "image/png",
             "cached": "False",
             "clientCacheExpiration": 300,
-            "shortname": "POIs"
+            "shortname": "POIs",
+            "checked": true
         },
         "townhalls_EPSG2154": {
             "id": "townhalls_EPSG2154_efe320fb_677c_45e4_8f32_aa1fe10cc3ce",
@@ -215,7 +221,8 @@
             "shortname": "townhalls_EPSG2154",
             "showFeatureCount": "True",
             "layerType": "vector",
-            "webDavFields": []
+            "webDavFields": [],
+            "checked": true
         },
         "shop_bakery": {
             "id": "points_241855da_7b4f_45e2_a5ac_c84f869f9f9d",
@@ -252,7 +259,8 @@
             "shortname": "shop_bakery",
             "showFeatureCount": "True",
             "layerType": "vector",
-            "webDavFields": []
+            "webDavFields": [],
+            "checked": true
         },
         "polygons": {
             "id": "polygons_c9ff77e3_8747_4188_be43_421c8605ee3d",
@@ -288,7 +296,8 @@
             "clientCacheExpiration": 300,
             "shortname": "polygons",
             "layerType": "vector",
-            "webDavFields": []
+            "webDavFields": [],
+            "checked": true
         },
         "baselayers": {
             "id": "baselayers",
@@ -315,7 +324,8 @@
             "cached": "False",
             "clientCacheExpiration": 300,
             "shortname": "baselayers",
-            "mutuallyExclusive": "True"
+            "mutuallyExclusive": "True",
+            "checked": true
         },
         "project-background-color": {
             "id": "project-background-color",
@@ -342,7 +352,8 @@
             "cached": "False",
             "clientCacheExpiration": 300,
             "shortname": "project-background-color",
-            "mutuallyExclusive": "True"
+            "mutuallyExclusive": "True",
+            "checked": true
         },
         "OpenStreetMap": {
             "id": "OpenStreetMap_d244c290_73fa_4469_93ae_c3e29d48072d",
@@ -385,7 +396,8 @@
                 "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                 "zmax": "19",
                 "zmin": "0"
-            }
+            },
+            "checked": true
         }
     },
     "timemanagerLayers": {},

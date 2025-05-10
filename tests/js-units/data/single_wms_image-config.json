@@ -48,7 +48,8 @@
         "datavizLocation": "dock",
         "theme": "dark",
         "fixed_scale_overview_map": true,
-        "dataviz_drag_drop": []
+        "dataviz_drag_drop": [],
+        "checked": true
     },
     "layers": {
         "GroupAsLayer": {
@@ -75,7 +76,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_lines_group_as_layer": {
             "id": "single_wms_lines_group_as_layer_3b2aea6c_f225_4840_9065_832910fd65ea",
@@ -109,7 +111,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_polygons_group_as_layer": {
             "id": "single_wms_polygons_group_as_layer_cb8ca18b_9474_411f_9e56_3e2cf877ab58",
@@ -143,7 +146,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "Group_1": {
             "id": "Group_1",
@@ -169,7 +173,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_lines_group": {
             "id": "single_wms_lines_group_83aee53e_4c30_43e8_afad_19b5c995dbd8",
@@ -203,7 +208,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_points_group": {
             "id": "single_wms_points_group_37aa76b0_0d6a_4b8c_8692_976350b1581b",
@@ -237,7 +243,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_points": {
             "id": "single_wms_points_7462146f_833e_4d7f_be4f_bccfc4ca1662",
@@ -275,7 +282,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_lines": {
             "id": "single_wms_lines_1e302878_563d_4cc7_9bed_145269e95d68",
@@ -309,7 +317,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_polygons": {
             "id": "single_wms_polygons_40d5f3fb_38b4_4012_9771_4a1f984eadf4",
@@ -344,7 +353,8 @@
             "imageFormat": "image/png",
             "cached": "True",
             "cacheExpiration": 0,
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "baselayers": {
             "id": "baselayers",
@@ -370,7 +380,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_baselayer": {
             "id": "single_wms_baselayer_cbae5bbf_e9ca_49e9_ab6b_59d321e98aa9",
@@ -404,7 +415,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "single_wms_tiled_baselayer": {
             "id": "single_wms_tiled_baselayer_18228037_1139_4478_ae3e_3161e331ba07",
@@ -439,7 +451,8 @@
             "imageFormat": "image/png",
             "cached": "True",
             "cacheExpiration": 0,
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         },
         "OpenStreetMap": {
             "id": "OpenStreetMap_029bc838_ea58_43c9_a5b6_cd7db7376d62",
@@ -472,7 +485,8 @@
             "singleTile": "True",
             "imageFormat": "image/png",
             "cached": "False",
-            "clientCacheExpiration": 300
+            "clientCacheExpiration": 300,
+            "checked": true
         }
     },
     "atlas": {
@@ -487,7 +501,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 0
+            "order": 0,
+            "checked": true
         },
         "single_wms_points": {
             "layerId": "single_wms_points_7462146f_833e_4d7f_be4f_bccfc4ca1662",
@@ -496,7 +511,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 1
+            "order": 1,
+            "checked": true
         },
         "single_wms_lines_group": {
             "layerId": "single_wms_lines_group_83aee53e_4c30_43e8_afad_19b5c995dbd8",
@@ -505,7 +521,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 2
+            "order": 2,
+            "checked": true
         },
         "single_wms_lines_group_as_layer": {
             "layerId": "single_wms_lines_group_as_layer_3b2aea6c_f225_4840_9065_832910fd65ea",
@@ -514,7 +531,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 3
+            "order": 3,
+            "checked": true
         },
         "single_wms_points_group": {
             "layerId": "single_wms_points_group_37aa76b0_0d6a_4b8c_8692_976350b1581b",
@@ -523,7 +541,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 4
+            "order": 4,
+            "checked": true
         },
         "single_wms_polygons": {
             "layerId": "single_wms_polygons_40d5f3fb_38b4_4012_9771_4a1f984eadf4",
@@ -532,7 +551,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 5
+            "order": 5,
+            "checked": true
         },
         "single_wms_polygons_group_as_layer": {
             "layerId": "single_wms_polygons_group_as_layer_cb8ca18b_9474_411f_9e56_3e2cf877ab58",
@@ -541,7 +561,8 @@
             "hideAsChild": "False",
             "hideLayer": "False",
             "custom_config": "False",
-            "order": 6
+            "order": 6,
+            "checked": true
         }
     },
     "tooltipLayers": {},
