@@ -5,10 +5,11 @@ import { LayerThemeConfig, ThemeConfig, ThemesConfig } from 'assets/src/modules/
 
 describe('LayerThemeConfig', function () {
     it('Valid', function () {
-        const layer1 = new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "1" })
+        const layer1 = new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "1", "checked": true })
         expect(layer1.layerId).to.be.eq('SousQuartiers20160121124316563')
         expect(layer1.style).to.be.eq('default')
         expect(layer1.expanded).to.be.eq(true)
+        expect(layer1.checked).to.be.eq(true)
     })
 
     it('ValidationError', function () {
@@ -31,7 +32,7 @@ describe('LayerThemeConfig', function () {
 
     it('ConversionError', function () {
         try {
-            new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "trust" })
+            new LayerThemeConfig("SousQuartiers20160121124316563", { "style": "default", "expanded": "trust", "checked": true })
         } catch (error) {
             expect(error.name).to.be.eq('ConversionError')
             expect(error.message).to.be.eq('`trust` is not an expected boolean: true, t, yes, y, 1, false, f, no, n, 0 or empty string ``!')
@@ -44,10 +45,10 @@ describe('ThemeConfig', function () {
     it('Valid', function () {
         const theme = new ThemeConfig("Administrative", {
             "layers": {
-                "SousQuartiers20160121124316563": { "style": "default", "expanded": "1" },
-                "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1" },
-                "publicbuildings20150420100958543": { "style": "default", "expanded": "1" },
-                "VilleMTP_MTP_Quartiers_2011_432620130116112610876": { "style": "default", "expanded": "0" }
+                "SousQuartiers20160121124316563": { "style": "default", "expanded": "1", "checked": true },
+                "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1", "checked": true },
+                "publicbuildings20150420100958543": { "style": "default", "expanded": "1", "checked": true },
+                "VilleMTP_MTP_Quartiers_2011_432620130116112610876": { "style": "default", "expanded": "0", "checked": true }
             },
             "expandedGroupNode": ["Edition", "datalayers\/Tramway", "datalayers\/Bus", "datalayers\/Buildings", "Overview", "datalayers", "Hidden"]
         })
@@ -63,6 +64,7 @@ describe('ThemeConfig', function () {
         expect(layer1.layerId).to.be.eq('SousQuartiers20160121124316563')
         expect(layer1.style).to.be.eq('default')
         expect(layer1.expanded).to.be.eq(true)
+        expect(layer1.checked).to.be.eq(true)
 
         expect(theme.getLayerConfigByLayerId('SousQuartiers20160121124316563')).to.be.eq(layer1)
         expect(theme.getLayerConfigs().next().value).to.be.eq(layer1)
@@ -96,34 +98,34 @@ describe('ThemesConfig', function () {
         const themes = new ThemesConfig({
             "Administrative": {
                 "layers": {
-                    "SousQuartiers20160121124316563": { "style": "default", "expanded": "1" },
-                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1" },
-                    "publicbuildings20150420100958543": { "style": "default", "expanded": "1" },
-                    "VilleMTP_MTP_Quartiers_2011_432620130116112610876": { "style": "default", "expanded": "0" }
+                    "SousQuartiers20160121124316563": { "style": "default", "expanded": "1", "checked": true },
+                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1", "checked": true },
+                    "publicbuildings20150420100958543": { "style": "default", "expanded": "1", "checked": true },
+                    "VilleMTP_MTP_Quartiers_2011_432620130116112610876": { "style": "default", "expanded": "0", "checked": true }
                 },
                 "expandedGroupNode": ["Edition", "datalayers\/Tramway", "datalayers\/Bus", "datalayers\/Buildings", "Overview", "datalayers", "Hidden"]
             },
             "Editable layers": {
                 "layers": {
-                    "SousQuartiers20160121124316563": { "style": "default", "expanded": "1" },
-                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1" },
-                    "publicbuildings20150420100958543": { "style": "default", "expanded": "1" },
-                    "edition_polygon20130409114333776": { "style": "default", "expanded": "0" },
-                    "edition_line20130409161630329": { "style": "default", "expanded": "0" },
-                    "edition_point20130118171631518": { "style": "default", "expanded": "0" }
+                    "SousQuartiers20160121124316563": { "style": "default", "expanded": "1", "checked": true },
+                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1", "checked": true },
+                    "publicbuildings20150420100958543": { "style": "default", "expanded": "1", "checked": true },
+                    "edition_polygon20130409114333776": { "style": "default", "expanded": "0", "checked": true },
+                    "edition_line20130409161630329": { "style": "default", "expanded": "0", "checked": true },
+                    "edition_point20130118171631518": { "style": "default", "expanded": "0", "checked": true }
                 },
                 "expandedGroupNode": ["Edition", "datalayers\/Tramway", "datalayers\/Bus", "datalayers\/Buildings", "Overview", "datalayers", "Hidden"]
             },
             "Transport": {
                 "layers": {
-                    "tramway20150328114206278": { "style": "black", "expanded": "1" },
-                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1" },
-                    "tramway_ref20150612171109044": { "style": "default", "expanded": "1" },
-                    "jointure_tram_stop20150328114216806": { "style": "default", "expanded": "1" },
-                    "tramstop20150328114203878": { "style": "default", "expanded": "1" },
-                    "tram_stop_work20150416102656130": { "style": "default", "expanded": "1" },
-                    "bus_stops20121106170806413": { "style": "default", "expanded": "0" },
-                    "bus20121102133611751": { "style": "default", "expanded": "0" }
+                    "tramway20150328114206278": { "style": "black", "expanded": "1", "checked": true },
+                    "donnes_sociodemo_sous_quartiers20160121144525075": { "style": "default", "expanded": "1", "checked": true },
+                    "tramway_ref20150612171109044": { "style": "default", "expanded": "1", "checked": true },
+                    "jointure_tram_stop20150328114216806": { "style": "default", "expanded": "1", "checked": true },
+                    "tramstop20150328114203878": { "style": "default", "expanded": "1", "checked": true },
+                    "tram_stop_work20150416102656130": { "style": "default", "expanded": "1", "checked": true },
+                    "bus_stops20121106170806413": { "style": "default", "expanded": "0", "checked": true },
+                    "bus20121102133611751": { "style": "default", "expanded": "0", "checked": true }
                 },
                 "expandedGroupNode": ["Edition", "datalayers\/Tramway", "datalayers\/Bus", "datalayers\/Buildings", "Overview", "datalayers", "Hidden"]
             }
@@ -147,6 +149,7 @@ describe('ThemesConfig', function () {
         expect(layer1.layerId).to.be.eq('SousQuartiers20160121124316563')
         expect(layer1.style).to.be.eq('default')
         expect(layer1.expanded).to.be.eq(true)
+        expect(layer1.checked).to.be.eq(true)
 
         expect(theme1.getLayerConfigByLayerId('SousQuartiers20160121124316563')).to.be.eq(layer1)
         expect(theme1.getLayerConfigs().next().value).to.be.eq(layer1)
@@ -169,7 +172,8 @@ describe('ThemesConfig', function () {
                 "layers": {
                     "quartiers_ef5b13e3_36db_4e0d_98b3_990de580367d": {
                         "style": "style1",
-                        "expanded": "0"
+                        "expanded": "0",
+                        "checked": true
                     }
                 },
                 "checkedGroupNode": [
@@ -180,7 +184,8 @@ describe('ThemesConfig', function () {
                 "layers": {
                     "quartiers_ef5b13e3_36db_4e0d_98b3_990de580367d": {
                         "style": "style2",
-                        "expanded": "1"
+                        "expanded": "1",
+                        "checked": true
                     }
                 },
                 "expandedGroupNode": [
@@ -191,7 +196,8 @@ describe('ThemesConfig', function () {
                 "layers": {
                     "tramway_lines_d90bd315_72dd_4dbd_b785_f835a3f61dea": {
                         "style": "default",
-                        "expanded": "1"
+                        "expanded": "1",
+                        "checked": true
                     }
                 },
                 "checkedGroupNode": [
@@ -211,11 +217,13 @@ describe('ThemesConfig', function () {
                 "layers": {
                     "sousquartiers_7c49d0fc_0ee0_4308_a66d_45c144e59872": {
                         "style": "rule-based",
-                        "expanded": "1"
+                        "expanded": "1",
+                        "checked": true
                     },
                     "OpenStreetMap_e6aed7cf_2f70_4236_ace0_b70d2c0e7c63": {
                         "style": "défaut",
-                        "expanded": "1"
+                        "expanded": "1",
+                        "checked": true
                     }
                 },
                 "checkedGroupNode": [
