@@ -8,7 +8,7 @@ on:
 jobs:
   packaging:
     runs-on: ubuntu-latest
-    if: github.repository == '3liz/lizmap-web-client'
+    if: github.repository == 'meyerlor/lizmap-web-client'
 
     steps:
 
