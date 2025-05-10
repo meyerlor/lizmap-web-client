@@ -654,15 +654,11 @@ class qgisProject
                 // Copy layers and their attributes
                 foreach ($theme->layer as $layer) {
                     $layerObj = $layer->attributes();
-                    // Since QGIS 3.26, theme contains every layers with visible attributes
-                    // before only visible layers are in theme
-                    // So do not keep layer with visible != '1' if it is defined
-                    if (isset($layerObj->visible) && (string) $layerObj->visible != '1') {
-                        continue;
-                    }
                     $themes[(string) $themeObj->name]['layers'][(string) $layerObj->id] = array(
                         'style' => (string) $layerObj->style,
                         'expanded' => (string) $layerObj->expanded,
+                        'visible' => (string) $layerObj->visible,
+                        'checked' => true, // If a layer is in the theme, it should be checked in the legend
                     );
                 }
 
@@ -670,6 +666,14 @@ class qgisProject
                 foreach ($theme->{'expanded-group-nodes'}->{'expanded-group-node'} as $expandedGroupNode) {
                     $expandedGroupNodeObj = $expandedGroupNode->attributes();
                     $themes[(string) $themeObj->name]['expandedGroupNode'][] = (string) $expandedGroupNodeObj->id;
+                }
+
+                // Copy checked group nodes
+                if (isset($theme->{'checked-group-nodes'})) {
+                    foreach ($theme->{'checked-group-nodes'}->{'checked-group-node'} as $checkedGroupNode) {
+                        $checkedGroupNodeObj = $checkedGroupNode->attributes();
+                        $themes[(string) $themeObj->name]['checkedGroupNode'][] = (string) $checkedGroupNodeObj->id;
+                    }
                 }
             }
 

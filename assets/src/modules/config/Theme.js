@@ -12,6 +12,7 @@ import { ValidationError } from './../Errors.js';
 const layerThemeRequiredProperties = {
     'style': {type: 'sting'},
     'expanded': {type: 'boolean'},
+    'checked': {type: 'boolean'},
 }
 
 const layerThemeOptionalProperties = {
@@ -56,6 +57,14 @@ export class LayerThemeConfig extends BaseObjectConfig {
      */
     get expanded() {
         return this._expanded;
+    }
+
+    /**
+     * Checked state in legend
+     * @type {boolean}
+     */
+    get checked() {
+        return this._checked;
     }
 }
 

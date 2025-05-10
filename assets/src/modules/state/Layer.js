@@ -534,22 +534,24 @@ export class LayerItemState extends EventDispatcher {
         } else {
             this._visibility = false;
         }
-        if (!this._visibility && this.type == 'group') {
-            for (const child of this.getChildren()) {
-                if (!child.checked) {
-                    continue;
-                }
-                child.calculateVisibility();
-            }
-        }
-        // Only dispatch event if visibility has changed
+
+        // Dispatch event if visibility has changed
         if (oldVisibility !== null && oldVisibility != this.visibility) {
             this.dispatch({
-                type: this.mapType+'.visibility.changed',
+                type: this.type+'.visibility.changed',
                 name: this.name,
                 visibility: this.visibility,
             });
         }
+
+        if (!this._visibility && this.type == 'group') {
+            for (const child of this.getChildren()) {
+                if (!child.checked) {
+                    child.calculateVisibility();
+                }
+            }
+        }
+
         return this._visibility;
     }
 

@@ -303,7 +303,8 @@ var lizLayerActionButtons = function() {
                                     layerOrGroup.wmsSelectedStyleName = style;
                                 }
 
-                                layerOrGroup.checked = true;
+                                // Set checked state from theme
+                                layerOrGroup.checked = layerParams?.checked === true;
                                 layerOrGroup.expanded = layerParams?.expanded === "1" || layerParams?.expanded === true;
 
                                 // `symbologyChildren` is empty for some time if the theme switches
@@ -318,7 +319,6 @@ var lizLayerActionButtons = function() {
                                         }
                                     }
                                 }, 1000);
-
                             }
                         }
 
