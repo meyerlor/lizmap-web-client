@@ -247,14 +247,14 @@ export default class Digitizing extends HTMLElement {
         const mainTemplate = (toolSelected) => html`
         <div class="digitizing">
             ${toolButtonTemplate(this._availableTools, toolSelected)}
-            <input
+            ${this.context !== 'edition' ? html`<input
                 type="color"
                 class="digitizing-color btn"
                 .value="${mainLizmap.digitizing.drawColor}"
                 @input=${(event) => mainLizmap.digitizing._userChangedColor(event.target.value)}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.color']}"
-                >
+                >` : ''}
             <button
                 type="button"
                 class="digitizing-edit btn ${mainLizmap.digitizing.isEdited ? 'active btn-primary' : ''}"

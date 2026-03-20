@@ -30,7 +30,9 @@ export default class Edition {
         this.drawControl = undefined;
         this._lastSegmentLength = undefined;
         this._geometryChangedListener = null;
+        this._featureDrawnListener = null;
         this._geolocationListener = null;
+        this._savedDrawColor = null;
 
         lizmap3.events.on({
             lizmapeditiondrawfeatureactivated: (properties) => {
@@ -116,6 +118,11 @@ export default class Edition {
         mainLizmap.digitizing.context = 'edition';
         mainLizmap.digitizing.singlePartGeometry = true;
 
+        // Force blue color for edition (like OL2 style) without persisting to localStorage
+        this._savedDrawColor = mainLizmap.digitizing.drawColor;
+        mainLizmap.digitizing._drawColor = '#3388ff';
+        mainEventDispatcher.dispatch({ type: 'digitizing.drawColor', color: '#3388ff' });
+
         // Load existing geometry from form if editing an existing feature
         const eform = document.querySelector('#edition-form-container form');
         if (eform) {
@@ -142,6 +149,19 @@ export default class Edition {
             mainEventDispatcher.addListener(
                 this._geometryChangedListener,
                 'digitizing.geometryChanged'
+            );
+        }
+
+        // Auto-switch to edit mode after first feature is drawn (like OL2 behavior)
+        if (!this._featureDrawnListener) {
+            this._featureDrawnListener = () => {
+                if (mainLizmap.digitizing.context === 'edition' && mainLizmap.digitizing.featureDrawn) {
+                    mainLizmap.digitizing.isEdited = true;
+                }
+            };
+            mainEventDispatcher.addListener(
+                this._featureDrawnListener,
+                'digitizing.featureDrawn'
             );
         }
 
@@ -214,6 +234,15 @@ export default class Edition {
             this._geometryChangedListener = null;
         }
 
+        // Remove feature drawn listener
+        if (this._featureDrawnListener) {
+            mainEventDispatcher.removeListener(
+                this._featureDrawnListener,
+                'digitizing.featureDrawn'
+            );
+            this._featureDrawnListener = null;
+        }
+
         // Remove geolocation listener
         if (this._geolocationListener) {
             mainEventDispatcher.removeListener(
@@ -228,6 +257,13 @@ export default class Edition {
             mainLizmap.digitizing.toolSelected = 'deactivate';
             mainLizmap.digitizing.eraseAll();
             mainLizmap.digitizing.context = 'draw';
+
+            // Restore user's draw color
+            if (this._savedDrawColor) {
+                mainLizmap.digitizing._drawColor = this._savedDrawColor;
+                mainEventDispatcher.dispatch({ type: 'digitizing.drawColor', color: this._savedDrawColor });
+                this._savedDrawColor = null;
+            }
         }
     }
 
