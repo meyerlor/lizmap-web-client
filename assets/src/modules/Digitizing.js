@@ -234,9 +234,17 @@ export class Digitizing {
             features: this._selectInteraction.getFeatures(),
         });
 
+        this._modifyInteraction.on('modifyend', () => {
+            mainEventDispatcher.dispatch('digitizing.geometryChanged');
+        });
+
         this._translateInteraction = new Translate({
             features: this._selectInteraction.getFeatures(),
             hitTolerance: 20
+        });
+
+        this._translateInteraction.on('translateend', () => {
+            mainEventDispatcher.dispatch('digitizing.geometryChanged');
         });
 
         this._transformRotateInteraction = new Transform({
@@ -244,9 +252,17 @@ export class Digitizing {
             scale: false,
         });
 
+        this._transformRotateInteraction.on('rotateend', () => {
+            mainEventDispatcher.dispatch('digitizing.geometryChanged');
+        });
+
         this._transformScaleInteraction = new Transform({
             rotate: false,
             scale: true,
+        });
+
+        this._transformScaleInteraction.on('scaleend', () => {
+            mainEventDispatcher.dispatch('digitizing.geometryChanged');
         });
 
         this._drawStyleFunction = (feature) => {
@@ -713,6 +729,8 @@ export class Digitizing {
                             Array.from(this._measureTooltips).pop()[1],
                         );
                     }
+
+                    mainEventDispatcher.dispatch('digitizing.geometryChanged');
                 });
 
                 this._map.addInteraction(this._drawInteraction);
@@ -1192,6 +1210,7 @@ export class Digitizing {
                          * }, 'digitizing.erase');
                          */
                         mainEventDispatcher.dispatch('digitizing.erase');
+                        mainEventDispatcher.dispatch('digitizing.geometryChanged');
                     }
                 };
 
@@ -1894,6 +1913,39 @@ export class Digitizing {
          */
         mainEventDispatcher.dispatch('digitizing.erase.all');
         mainEventDispatcher.dispatch('digitizing.erase');
+        mainEventDispatcher.dispatch('digitizing.geometryChanged');
+    }
+
+    /**
+     * Get the first drawn feature as WKT in the given SRID
+     * @param {string|number} srid - Target SRID (e.g. 4326)
+     * @returns {string} WKT string or empty string if no features
+     */
+    getFeatureAsWKT(srid) {
+        const features = this.featureDrawn;
+        if (!features || features.length === 0) return '';
+        const wktFormat = new WKT();
+        const geom = features[0].getGeometry().clone();
+        geom.transform(this._map.getView().getProjection(), 'EPSG:' + srid);
+        return wktFormat.writeGeometry(geom);
+    }
+
+    /**
+     * Load a feature from WKT string and add it to the draw source
+     * @param {string} wktString - WKT geometry string
+     * @param {string|number} srid - Source SRID of the WKT
+     * @returns {Feature|null} The loaded feature or null
+     */
+    loadFeatureFromWKT(wktString, srid) {
+        if (!wktString) return null;
+        const wktFormat = new WKT();
+        const feature = wktFormat.readFeature(wktString, {
+            dataProjection: 'EPSG:' + srid,
+            featureProjection: this._map.getView().getProjection()
+        });
+        this.eraseAll();
+        this._drawSource.addFeature(feature);
+        return feature;
     }
 
     /**

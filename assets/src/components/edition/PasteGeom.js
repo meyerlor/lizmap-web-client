@@ -44,9 +44,10 @@ export default class pasteGeom extends HTMLElement {
      * @returns {boolean} True if can activate
      */
     _canActivate() {
-        const drawActive = mainLizmap?.edition?.drawFeatureActivated || false;
+        const digitizingActive = mainLizmap?.digitizing?.toolSelected !== 'deactivate'
+            || mainLizmap?.digitizing?.context === 'edition';
         const hasLayerId = !!mainLizmap?.edition?.layerId;
-        return drawActive || hasLayerId;
+        return digitizingActive || hasLayerId;
     }
 
     connectedCallback() {

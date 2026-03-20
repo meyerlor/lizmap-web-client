@@ -5,10 +5,15 @@
  * @license MPL-2.0
  */
 
-import { mainEventDispatcher } from '../modules/Globals.js';
+import { mainLizmap, mainEventDispatcher } from '../modules/Globals.js';
 import Edition from './Edition.js';
 import { MapRootState } from './state/MapLayer.js';
 import { TreeRootState } from './state/LayerTree.js';
+
+import { Snap } from 'ol/interaction.js';
+import { Vector as VectorSource } from 'ol/source.js';
+import { Vector as VectorLayer } from 'ol/layer.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
 
 /**
  * @class
@@ -40,29 +45,17 @@ export default class Snapping {
         this._snapToggled = {};
         this._snapLayers = [];
 
-        // Create layer to store snap features
-        const snapLayer = new OpenLayers.Layer.Vector('snaplayer', {
-            visibility: false,
-            styleMap: new OpenLayers.StyleMap({
-                pointRadius: 2,
-                fill: false,
-                stroke: false,
-                strokeWidth: 3,
-                strokeColor: 'red',
-                strokeOpacity: 0.8
-            })
+        // Create OL6 snap source and layer
+        this._snapSource = new VectorSource();
+        this._snapLayer = new VectorLayer({
+            source: this._snapSource,
+            visible: false
         });
+        this._snapLayer.setProperties({ name: 'snaplayer' });
 
-        this._lizmap3.map.addLayer(snapLayer);
-
-        const snapControl = new OpenLayers.Control.Snapping({
-            layer: this._edition.editLayer,
-            targets: [{
-                layer: snapLayer
-            }]
-        });
-        this._lizmap3.map.addControls([snapControl]);
-        this._lizmap3.controls['snapControl'] = snapControl;
+        // Will be added to map once mainLizmap.map is ready
+        this._snapInteraction = null;
+        this._mapReady = false;
 
         this._setSnapLayersRefreshable = () => {
             if(this._active){
@@ -103,9 +96,19 @@ export default class Snapping {
             this._snapLayers = visibleLayers.concat(snapLayers);
         }
 
+        // Ensure snap layer is added to map when available
+        this._ensureMapReady = () => {
+            if (!this._mapReady && mainLizmap.map) {
+                mainLizmap.map.addToolLayer(this._snapLayer);
+                this._mapReady = true;
+            }
+        };
+
         // Activate snap when a layer is edited
         mainEventDispatcher.addListener(
             () => {
+                this._ensureMapReady();
+
                 // Get snapping configuration for edited layer
                 for (const editionLayer in this._lizmap3.config.editionLayers) {
                     if (this._lizmap3.config.editionLayers.hasOwnProperty(editionLayer)) {
@@ -142,21 +145,8 @@ export default class Snapping {
                 }
 
                 if (this._config !== undefined){
-                    // Configure snapping
-                    const snapControl = this._lizmap3.controls.snapControl;
-
-                    // Set edition layer as main layer
-                    snapControl.setLayer(this._edition.editLayer);
-
-                    snapControl.targets[0].node = this._config.snap_vertices;
-                    snapControl.targets[0].vertex = this._config.snap_intersections;
-                    snapControl.targets[0].edge = this._config.snap_segments;
-                    snapControl.targets[0].nodeTolerance = this._config.snap_vertices_tolerance;
-                    snapControl.targets[0].vertexTolerance = this._config.snap_intersections_tolerance;
-                    snapControl.targets[0].edgeTolerance = this._config.snap_segments_tolerance;
-
                     // Listen to moveend event and to layers visibility changes to able data refreshing
-                    this._lizmap3.map.events.register('moveend', this, this._setSnapLayersRefreshable);
+                    mainLizmap.map.on('moveend', this._setSnapLayersRefreshable);
                     this._rootMapGroup.addListener(
                         this._setSnapLayersVisibility,
                         ['layer.visibility.changed','group.visibility.changed']
@@ -170,11 +160,13 @@ export default class Snapping {
         mainEventDispatcher.addListener(
             () => {
                 this.active = false;
-                this._lizmap3.map.getLayersByName('snaplayer')[0].destroyFeatures();
+                this._snapSource.clear();
                 this.config = undefined;
 
-                // Remove listener to moveend event to layers visibility event
-                this._lizmap3.map.events.unregister('moveend', this, this._setSnapLayersRefreshable);
+                // Remove listener to moveend event and layers visibility event
+                if (mainLizmap.map) {
+                    mainLizmap.map.un('moveend', this._setSnapLayersRefreshable);
+                }
                 this._rootMapGroup.removeListener(
                     this._setSnapLayersVisibility,
                     ['layer.visibility.changed','group.visibility.changed']
@@ -185,15 +177,17 @@ export default class Snapping {
     }
 
     getSnappingData () {
-        // Empty snapping layer first
-        this._lizmap3.map.getLayersByName('snaplayer')[0].destroyFeatures();
+        // Empty snapping source first
+        this._snapSource.clear();
 
         // filter only visible layers and toggled layers on the the snap list
         const currentSnapLayers = this._snapLayers.filter(
             (layerId) => this._snapEnabled[layerId] && this._snapToggled[layerId]
         );
 
-        // TODO : group aync calls with Promises
+        const mapProjection = mainLizmap.map.getView().getProjection().getCode();
+
+        // TODO : group async calls with Promises
         for (const snapLayer of currentSnapLayers) {
 
             lizMap.getFeatureData(this._lizmap3.getLayerConfigById(snapLayer)[0], null, null, 'geom', this._restrictToMapExtent, null, this._maxFeatures,
@@ -206,20 +200,17 @@ export default class Snapping {
                         snapLayerCrs = snapLayerConfig['crs'];
                     }
 
-                    // TODO : use OL 6 instead ?
-                    const gFormat = new OpenLayers.Format.GeoJSON({
-                        ignoreExtraDims: true,
-                        externalProjection: snapLayerCrs,
-                        internalProjection: this._lizmap3.map.getProjection()
-                    });
-
-                    const tfeatures = gFormat.read({
-                        type: 'FeatureCollection',
-                        features: fFeatures
-                    });
+                    const gFormat = new GeoJSON();
+                    const tfeatures = gFormat.readFeatures(
+                        { type: 'FeatureCollection', features: fFeatures },
+                        {
+                            dataProjection: snapLayerCrs,
+                            featureProjection: mapProjection
+                        }
+                    );
 
                     // Add features
-                    this._lizmap3.map.getLayersByName('snaplayer')[0].addFeatures(tfeatures);
+                    this._snapSource.addFeatures(tfeatures);
                 });
         }
 
@@ -290,20 +281,53 @@ export default class Snapping {
     set active(active) {
         this._active = active;
 
-        // (de)activate snap control
+        // (de)activate snap interaction
         if (this._active) {
             this.getSnappingData();
-            this._lizmap3.controls.snapControl.activate();
+            this._createSnapInteraction();
         } else {
             // Disable refresh button when snapping is inactive
             this.snapLayersRefreshable = false;
-            this._lizmap3.controls.snapControl.deactivate();
+            this._removeSnapInteraction();
         }
 
         // Set snap layer visibility
-        this._lizmap3.map.getLayersByName('snaplayer')[0].setVisibility(this._active);
+        this._snapLayer.setVisible(this._active);
 
         mainEventDispatcher.dispatch('snapping.active');
+    }
+
+    /**
+     * Create and add the OL6 Snap interaction to the map
+     * @private
+     */
+    _createSnapInteraction() {
+        this._removeSnapInteraction();
+
+        if (!this._config || !mainLizmap.map) return;
+
+        this._snapInteraction = new Snap({
+            source: this._snapSource,
+            vertex: this._config.snap_vertices || this._config.snap_intersections,
+            edge: this._config.snap_segments,
+            pixelTolerance: Math.max(
+                parseInt(this._config.snap_vertices_tolerance) || 10,
+                parseInt(this._config.snap_segments_tolerance) || 10
+            )
+        });
+
+        mainLizmap.map.addInteraction(this._snapInteraction);
+    }
+
+    /**
+     * Remove the OL6 Snap interaction from the map
+     * @private
+     */
+    _removeSnapInteraction() {
+        if (this._snapInteraction && mainLizmap.map) {
+            mainLizmap.map.removeInteraction(this._snapInteraction);
+            this._snapInteraction = null;
+        }
     }
 
     get config() {
@@ -312,6 +336,11 @@ export default class Snapping {
 
     set config(config) {
         this._config = config;
+
+        // Re-create snap interaction with updated config when active
+        if (this._active && this._config) {
+            this._createSnapInteraction();
+        }
 
         mainEventDispatcher.dispatch('snapping.config');
     }

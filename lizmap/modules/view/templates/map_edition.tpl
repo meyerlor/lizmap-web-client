@@ -35,6 +35,12 @@
                     </div>
                 </div>
                 <div class="tab-pane" id="tabdigitization">
+                    <lizmap-digitizing
+                        context="edition"
+                        selected-tool="point"
+                        available-tools="point"
+                        measure
+                    ></lizmap-digitizing>
                     <div id="edition-geomtool-container" class="btn-group" data-toggle="buttons-radio"
                         style="display:none;">
                         <button id="edition-geomtool-nodetool" class="btn btn-sm"

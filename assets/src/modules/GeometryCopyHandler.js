@@ -41,10 +41,11 @@ export default class GeometryCopyHandler {
 
         this._active = true;
 
-        // Deactivate draw control to prevent creating vertices on map click
-        if (mainLizmap?.edition?.drawControl && mainLizmap.edition.drawControl.active) {
+        // Deactivate digitizing tool to prevent creating vertices on map click
+        if (mainLizmap?.digitizing?.toolSelected !== 'deactivate') {
             this._drawControlWasActive = true;
-            mainLizmap.edition.drawControl.deactivate();
+            this._previousTool = mainLizmap.digitizing.toolSelected;
+            mainLizmap.digitizing.toolSelected = 'deactivate';
         }
 
         // Change cursor
@@ -68,10 +69,11 @@ export default class GeometryCopyHandler {
 
         this._active = false;
 
-        // Reactivate draw control if it was active before
-        if (this._drawControlWasActive && mainLizmap?.edition?.drawControl) {
-            mainLizmap.edition.drawControl.activate();
+        // Reactivate digitizing tool if it was active before
+        if (this._drawControlWasActive && mainLizmap?.digitizing && this._previousTool) {
+            mainLizmap.digitizing.toolSelected = this._previousTool;
             this._drawControlWasActive = false;
+            this._previousTool = null;
         }
 
         // Reset cursor
@@ -428,41 +430,57 @@ export default class GeometryCopyHandler {
 
     /**
      * Apply copied geometry to current editing feature
-     * @param {object} geometry - Geometry to apply
+     * @param {object} geometry - OL2 geometry to apply
      */
     _applyGeometryToEditing(geometry) {
-        if (!mainLizmap.edition) {
+        if (!mainLizmap.edition || !mainLizmap.digitizing) {
             return;
         }
 
-        const geomClone = geometry.clone();
-        const feature = new OpenLayers.Feature.Vector(geomClone);
-
-        // Try to apply to draw control layer (for new features being drawn)
-        if (mainLizmap.edition.drawControl && mainLizmap.edition.drawControl.layer) {
-            mainLizmap.edition.drawControl.layer.removeAllFeatures();
-            mainLizmap.edition.drawControl.layer.addFeatures([feature]);
+        // Convert OL2 geometry to OL6 feature and add to digitizing draw source
+        const ol6Geom = this._convertOL2ToOL6Geometry(geometry);
+        if (ol6Geom) {
+            const ol6Feature = new (lizMap.ol.Feature)(ol6Geom);
+            mainLizmap.digitizing._drawSource.clear();
+            mainLizmap.digitizing._drawSource.addFeature(ol6Feature);
+            mainEventDispatcher.dispatch('digitizing.geometryChanged');
         }
+    }
 
-        // Try to apply to modify control layer (for existing features being edited)
-        if (mainLizmap.edition.modifyFeatureControl &&
-            mainLizmap.edition.modifyFeatureControl.active &&
-            mainLizmap.edition.modifyFeatureControl.layer) {
-            mainLizmap.edition.modifyFeatureControl.layer.destroyFeatures();
-            mainLizmap.edition.modifyFeatureControl.layer.addFeatures([feature]);
+    /**
+     * Convert OL2 geometry to OL6 geometry
+     * @param {object} ol2Geom - OL2 geometry
+     * @returns {object|null} OL6 geometry or null
+     */
+    _convertOL2ToOL6Geometry(ol2Geom) {
+        const className = ol2Geom.CLASS_NAME;
+        if (className === 'OpenLayers.Geometry.Point') {
+            return new (lizMap.ol.geom.Point)([ol2Geom.x, ol2Geom.y]);
+        } else if (className === 'OpenLayers.Geometry.LineString') {
+            const coords = ol2Geom.components.map(p => [p.x, p.y]);
+            return new (lizMap.ol.geom.LineString)(coords);
+        } else if (className === 'OpenLayers.Geometry.Polygon') {
+            const rings = ol2Geom.components.map(ring =>
+                ring.components.map(p => [p.x, p.y])
+            );
+            return new (lizMap.ol.geom.Polygon)(rings);
+        } else if (className === 'OpenLayers.Geometry.MultiPoint') {
+            const coords = ol2Geom.components.map(p => [p.x, p.y]);
+            return new (lizMap.ol.geom.MultiPoint)(coords);
+        } else if (className === 'OpenLayers.Geometry.MultiLineString') {
+            const lines = ol2Geom.components.map(line =>
+                line.components.map(p => [p.x, p.y])
+            );
+            return new (lizMap.ol.geom.MultiLineString)(lines);
+        } else if (className === 'OpenLayers.Geometry.MultiPolygon') {
+            const polys = ol2Geom.components.map(poly =>
+                poly.components.map(ring =>
+                    ring.components.map(p => [p.x, p.y])
+                )
+            );
+            return new (lizMap.ol.geom.MultiPolygon)(polys);
         }
-
-        // Try to find editLayer directly (legacy approach)
-        const editLayers = this._map.getLayersByName('editLayer');
-        if (editLayers && editLayers.length > 0) {
-            editLayers[0].removeAllFeatures();
-            editLayers[0].addFeatures([feature]);
-        }
-
-        // Update geometry field in form if available
-        if (lizMap.edition && typeof lizMap.edition.updateGeometryColumnFromFeature === 'function') {
-            lizMap.edition.updateGeometryColumnFromFeature(feature);
-        }
+        return null;
     }
 
     /**
