@@ -730,7 +730,10 @@ export class Digitizing {
                         );
                     }
 
-                    mainEventDispatcher.dispatch('digitizing.geometryChanged');
+                    // Dispatch after microtask so the feature is in the source
+                    Promise.resolve().then(() => {
+                        mainEventDispatcher.dispatch('digitizing.geometryChanged');
+                    });
                 });
 
                 this._map.addInteraction(this._drawInteraction);

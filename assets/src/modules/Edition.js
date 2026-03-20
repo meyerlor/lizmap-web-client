@@ -10,6 +10,8 @@ import { mainLizmap, mainEventDispatcher } from '../modules/Globals.js';
 import { getLength } from 'ol/sphere.js';
 import { Feature } from 'ol';
 import { Point, LineString } from 'ol/geom.js';
+import proj4 from 'proj4';
+import { register } from 'ol/proj/proj4.js';
 
 /**
  * @class
@@ -132,6 +134,17 @@ export default class Edition {
         if (eform) {
             const gColumn = eform.querySelector('input[name="liz_geometryColumn"]')?.value;
             const srid = eform.querySelector('input[name="liz_srid"]')?.value;
+            const proj4Def = eform.querySelector('input[name="liz_proj4"]')?.value;
+
+            // Register the layer's SRID in proj4/OL6 if not already known
+            if (srid && proj4Def) {
+                const epsgCode = 'EPSG:' + srid;
+                if (!proj4.defs(epsgCode)) {
+                    proj4.defs(epsgCode, proj4Def);
+                    register(proj4);
+                }
+            }
+
             const wkt = gColumn ? eform.querySelector(`input[name="${gColumn}"]`)?.value : '';
             if (wkt) {
                 mainLizmap.digitizing.loadFeatureFromWKT(wkt, srid);
