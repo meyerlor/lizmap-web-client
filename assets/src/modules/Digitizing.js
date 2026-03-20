@@ -1096,6 +1096,7 @@ export class Digitizing {
                                     // Remove original polygon
                                     this._drawSource.removeFeature(feature);
 
+                                    const splitFeatures = [];
                                     // Iterate through splitted polygons
                                     polygons.array.forEach(geom => {
                                         let splitted_polygon = new Feature({
@@ -1105,9 +1106,15 @@ export class Digitizing {
                                         // Add splitted polygon to vector layer
                                         this._drawSource.addFeature(splitted_polygon);
                                         this._selectInteraction.getFeatures().push(splitted_polygon);
+                                        splitFeatures.push(splitted_polygon);
                                     });
 
                                     this.isEdited = true;
+                                    mainEventDispatcher.dispatch({
+                                        type: 'digitizing.splitComplete',
+                                        features: splitFeatures,
+                                        geometryType: 'polygon'
+                                    });
                                 }
                             } else if (geomType === 'LineString') {
                                 const format = new GeoJSON();
@@ -1120,10 +1127,17 @@ export class Digitizing {
                                     // Remove original lineString
                                     this._drawSource.removeFeature(feature);
 
+                                    const splitFeatures = [];
                                     split.features.forEach((feature) => {
                                         let splitted_line = format.readFeature(feature);
                                         this._drawSource.addFeature(splitted_line);
                                         this._selectInteraction.getFeatures().push(splitted_line);
+                                        splitFeatures.push(splitted_line);
+                                    });
+                                    mainEventDispatcher.dispatch({
+                                        type: 'digitizing.splitComplete',
+                                        features: splitFeatures,
+                                        geometryType: 'line'
                                     });
                                 }
                                 this.isEdited = true;
@@ -1917,15 +1931,19 @@ export class Digitizing {
     }
 
     /**
-     * Get the first drawn feature as WKT in the given SRID
+     * Get a feature as WKT in the given SRID
      * @param {string|number} srid - Target SRID (e.g. 4326)
+     * @param {Feature} [feature] - Optional specific feature. Defaults to first drawn feature.
      * @returns {string} WKT string or empty string if no features
      */
-    getFeatureAsWKT(srid) {
-        const features = this.featureDrawn;
-        if (!features || features.length === 0) return '';
+    getFeatureAsWKT(srid, feature) {
+        if (!feature) {
+            const features = this.featureDrawn;
+            if (!features || features.length === 0) return '';
+            feature = features[0];
+        }
         const wktFormat = new WKT();
-        const geom = features[0].getGeometry().clone();
+        const geom = feature.getGeometry().clone();
         geom.transform(this._map.getView().getProjection(), 'EPSG:' + srid);
         return wktFormat.writeGeometry(geom);
     }

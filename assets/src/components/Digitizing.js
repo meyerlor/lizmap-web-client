@@ -244,6 +244,9 @@ export default class Digitizing extends HTMLElement {
             </form>
             `;
 
+        // In edition context, check if editing a point layer (no rotate/scale/split needed)
+        const isEditionPoint = this.context === 'edition' && mainLizmap.edition?.layerGeometry === 'point';
+
         const mainTemplate = (toolSelected) => html`
         <div class="digitizing">
             ${toolButtonTemplate(this._availableTools, toolSelected)}
@@ -267,7 +270,7 @@ export default class Digitizing extends HTMLElement {
                     <use href="${lizUrls.svgSprite}#edit"/>
                 </svg>
             </button>
-            <button
+            ${!isEditionPoint ? html`<button
                 type="button"
                 class="digitizing-rotate btn ${mainLizmap.digitizing.isRotate ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
@@ -302,7 +305,7 @@ export default class Digitizing extends HTMLElement {
                 <svg>
                     <use href="${lizUrls.svgSprite}#split"/>
                 </svg>
-            </button>
+            </button>` : ''}
             <button
                 type="button"
                 class="digitizing-erase btn ${mainLizmap.digitizing.isErasing ? 'active btn-primary' : ''}"
@@ -315,7 +318,7 @@ export default class Digitizing extends HTMLElement {
                     <use href="${lizUrls.svgSprite}#eraser"/>
                 </svg>
             </button>
-            <button
+            ${!isEditionPoint ? html`<button
                 type="button"
                 class="digitizing-erase-all btn"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
@@ -326,7 +329,7 @@ export default class Digitizing extends HTMLElement {
                 <svg>
                     <use href="${lizUrls.svgSprite}#eraser-all"/>
                 </svg>
-            </button>
+            </button>` : ''}
             <button
                 type="button"
                 class="digitizing-toggle-visibility btn"
@@ -337,7 +340,7 @@ export default class Digitizing extends HTMLElement {
                 >
                 <i class="icon-eye-${mainLizmap.digitizing.visibility ? 'open' : 'close'}"></i>
             </button>
-            ${this.measureAvailable ? measureButtonTemplate(
+            ${this.measureAvailable && !isEditionPoint ? measureButtonTemplate(
                 mainLizmap.digitizing.hasMeasureVisible,
             ) : ''}
             ${this.saveAvailable ? saveButtonTemplate(

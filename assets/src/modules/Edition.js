@@ -32,6 +32,7 @@ export default class Edition {
         this._geometryChangedListener = null;
         this._featureDrawnListener = null;
         this._geolocationListener = null;
+        this._splitCompleteListener = null;
         this._savedDrawColor = null;
 
         lizmap3.events.on({
@@ -118,6 +119,9 @@ export default class Edition {
         mainLizmap.digitizing.context = 'edition';
         mainLizmap.digitizing.singlePartGeometry = true;
 
+        // Put OL6 map on top so Draw interaction receives clicks
+        mainLizmap.newOlMap = true;
+
         // Force blue color for edition (like OL2 style) without persisting to localStorage
         this._savedDrawColor = mainLizmap.digitizing.drawColor;
         mainLizmap.digitizing._drawColor = '#3388ff';
@@ -175,6 +179,17 @@ export default class Edition {
                 'geolocation.position'
             );
         }
+
+        // Listen to split complete to store new features for saving
+        if (!this._splitCompleteListener) {
+            this._splitCompleteListener = (evt) => {
+                this._handleSplitComplete(evt);
+            };
+            mainEventDispatcher.addListener(
+                this._splitCompleteListener,
+                'digitizing.splitComplete'
+            );
+        }
     }
 
     /**
@@ -222,6 +237,63 @@ export default class Edition {
     }
 
     /**
+     * Handle split complete in edition context.
+     * Determines the smaller/larger split parts and triggers the legacy split workflow.
+     * @param {object} evt - The split event with features array and geometryType
+     * @private
+     */
+    _handleSplitComplete(evt) {
+        if (mainLizmap.digitizing.context !== 'edition') return;
+        if (!evt.features || evt.features.length < 2) return;
+
+        const eform = document.querySelector('#edition-form-container form');
+        if (!eform) return;
+
+        const gColumn = eform.querySelector('input[name="liz_geometryColumn"]')?.value;
+        const srid = eform.querySelector('input[name="liz_srid"]')?.value;
+        if (!gColumn || !srid) return;
+
+        // Determine smaller and larger features
+        let smallerFeature;
+        const f0 = evt.features[0];
+        const f1 = evt.features[1];
+        const g0 = f0.getGeometry();
+        const g1 = f1.getGeometry();
+
+        if (evt.geometryType === 'line') {
+            const len0 = getLength(g0, { projection: mainLizmap.map.getView().getProjection() });
+            const len1 = getLength(g1, { projection: mainLizmap.map.getView().getProjection() });
+            smallerFeature = len0 < len1 ? f0 : f1;
+        } else {
+            const area0 = g0.getArea ? g0.getArea() : 0;
+            const area1 = g1.getArea ? g1.getArea() : 0;
+            smallerFeature = area0 < area1 ? f0 : f1;
+        }
+
+        // Serialize smaller feature to WKT
+        const smallerWkt = mainLizmap.digitizing.getFeatureAsWKT(srid, smallerFeature);
+
+        // Clone form data for the new feature (empty featureId and token for new record)
+        const formData = new FormData(eform);
+        formData.set('liz_featureId', '');
+        formData.set('__JFORMS_TOKEN__', '');
+        if (gColumn) {
+            formData.set(gColumn, smallerWkt);
+        }
+
+        // Remove smaller feature from draw source, keep larger
+        mainLizmap.digitizing._drawSource.removeFeature(smallerFeature);
+
+        // Trigger legacy event so edition.js can store the new feature for saving
+        this._lizmap3.events.triggerEvent('lizmapeditionsplitcomplete', {
+            newFeatureFormData: formData
+        });
+
+        // Update form geometry with the remaining (larger) feature
+        mainEventDispatcher.dispatch('digitizing.geometryChanged');
+    }
+
+    /**
      * Deactivate the digitizing module for edition
      */
     deactivateDigitizing() {
@@ -252,11 +324,23 @@ export default class Edition {
             this._geolocationListener = null;
         }
 
+        // Remove split complete listener
+        if (this._splitCompleteListener) {
+            mainEventDispatcher.removeListener(
+                this._splitCompleteListener,
+                'digitizing.splitComplete'
+            );
+            this._splitCompleteListener = null;
+        }
+
         // Clear digitizing features for edition context
         if (mainLizmap.digitizing && mainLizmap.digitizing.context === 'edition') {
             mainLizmap.digitizing.toolSelected = 'deactivate';
             mainLizmap.digitizing.eraseAll();
             mainLizmap.digitizing.context = 'draw';
+
+            // Restore OL2 map on top
+            mainLizmap.newOlMap = false;
 
             // Restore user's draw color
             if (this._savedDrawColor) {

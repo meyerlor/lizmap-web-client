@@ -846,6 +846,15 @@ var lizEdition = function() {
                 vertexmodified: function() {}
             });
 
+            // Handle split complete from OL6 Edition module
+            lizMap.events.on({
+                lizmapeditionsplitcomplete: function(evt) {
+                    if (evt.newFeatureFormData) {
+                        editionLayer.currentFeature.newfeatures.push([null, evt.newFeatureFormData]);
+                    }
+                }
+            });
+
             $('#edition-draw').click(async function(){
                 // Do nothing if not enabled
                 if ( $(this).hasClass('disabled') )
