@@ -1628,9 +1628,8 @@ var lizEdition = function() {
                             addEditionMessage(lizDict['edition.draw.activate'],'info',true);
                         }
 
-                        if (geometryType !== 'point'){
-                            $('#edition-geomtool-container').show();
-                        }
+                        // Legacy geomtool buttons replaced by OL6 digitizing toolbar
+                        $('#edition-geomtool-container').hide();
                     } else {
                         $('.edition-tabs button[data-bs-target="#tabdigitization"]').hide();
                     }
@@ -1643,9 +1642,8 @@ var lizEdition = function() {
                         // Fire event to let OL6 Edition.js handle loading and editing
                         activateDrawFeature();
 
-                        if (geometryType !== 'point'){
-                            $('#edition-geomtool-container').show();
-                        }
+                        // Legacy geomtool buttons replaced by OL6 digitizing toolbar
+                        $('#edition-geomtool-container').hide();
                     }else{
                         $('.edition-tabs button[data-bs-target="#tabdigitization"]').hide();
                     }

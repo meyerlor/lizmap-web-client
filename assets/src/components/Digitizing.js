@@ -244,10 +244,16 @@ export default class Digitizing extends HTMLElement {
             </form>
             `;
 
-        // In edition context, check if editing a point layer (no rotate/scale/split needed)
-        const isEditionPoint = this.context === 'edition' && mainLizmap.edition?.layerGeometry === 'point';
+        const mainTemplate = (toolSelected) => {
+            // Evaluate on every render so it reflects current edition state
+            const isEditionPoint = this.context === 'edition' && mainLizmap.edition?.layerGeometry === 'point';
 
-        const mainTemplate = (toolSelected) => html`
+            // For point layers in edition, no toolbar needed — drawing starts automatically
+            if (isEditionPoint) {
+                return html`<div class="digitizing"></div>`;
+            }
+
+            return html`
         <div class="digitizing">
             ${toolButtonTemplate(this._availableTools, toolSelected)}
             ${this.context !== 'edition' ? html`<input
@@ -453,6 +459,7 @@ export default class Digitizing extends HTMLElement {
                 mainLizmap.digitizing.editedFeatures.length != 0
             ) : ''}
         </div>`;
+        };
 
         render(
             mainTemplate(
@@ -468,6 +475,15 @@ export default class Digitizing extends HTMLElement {
 
         mainEventDispatcher.addListener(
             () => {
+                // Sync component tool state with module when context matches
+                if (mainLizmap.digitizing.context === this.context) {
+                    const moduleTool = mainLizmap.digitizing.toolSelected;
+                    if (this._availableTools.includes(moduleTool)) {
+                        this._toolSelected = moduleTool;
+                    } else if (moduleTool === 'deactivate') {
+                        this._toolSelected = DigitizingAvailableTools[0];
+                    }
+                }
                 if (!this.disabled) {
                     render(
                         mainTemplate(
