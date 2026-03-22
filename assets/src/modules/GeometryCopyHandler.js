@@ -10,6 +10,7 @@ import FeaturePickerPopup from './FeaturePickerPopup.js';
 import { Utils } from './Utils.js';
 import { Feature } from 'ol';
 import { Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon } from 'ol/geom.js';
+import WKT from 'ol/format/WKT.js';
 
 /**
  * Handles geometry copy workflow
@@ -20,6 +21,7 @@ export default class GeometryCopyHandler {
         this._map = map;
         this._active = false;
         this._clickHandler = null;
+        this._ol6ClickHandler = null;
         this._featurePickerPopup = new FeaturePickerPopup(map);
         this._drawControlWasActive = false;
 
@@ -52,8 +54,14 @@ export default class GeometryCopyHandler {
         $('#map').css('cursor', 'crosshair');
         $('#newOlMap').css('cursor', 'crosshair');
 
-        // Register click handler
-        this._clickHandler = this._map.events.register('click', this, this._onMapClick);
+        // Register click handler on the appropriate map
+        // In edition context, OL6 map is on top so use OL6 click handler
+        if (mainLizmap.digitizing?.context === 'edition' && mainLizmap.map) {
+            this._ol6ClickHandler = (event) => this._onOL6MapClick(event);
+            mainLizmap.map.on('singleclick', this._ol6ClickHandler);
+        } else {
+            this._clickHandler = this._map.events.register('click', this, this._onMapClick);
+        }
 
         // Dispatch event
         mainEventDispatcher.dispatch({
@@ -80,10 +88,14 @@ export default class GeometryCopyHandler {
         $('#map').css('cursor', 'default');
         $('#newOlMap').css('cursor', '');
 
-        // Unregister click handler
+        // Unregister click handlers
         if (this._clickHandler) {
             this._map.events.unregister('click', this, this._onMapClick);
             this._clickHandler = null;
+        }
+        if (this._ol6ClickHandler && mainLizmap.map) {
+            mainLizmap.map.un('singleclick', this._ol6ClickHandler);
+            this._ol6ClickHandler = null;
         }
 
         // Hide popup if open
@@ -96,8 +108,8 @@ export default class GeometryCopyHandler {
     }
 
     /**
-     * Handle map click
-     * @param {object} event - Map click event
+     * Handle OL2 map click
+     * @param {object} event - OL2 Map click event
      */
     _onMapClick(event) {
         const position = event.xy;
@@ -105,6 +117,19 @@ export default class GeometryCopyHandler {
 
         // Query features at this position
         this._queryFeaturesAtPosition(coordinate, position);
+    }
+
+    /**
+     * Handle OL6 map click (used in edition context when OL6 map is on top)
+     * @param {import('ol/MapBrowserEvent').default} event - OL6 map click event
+     */
+    _onOL6MapClick(event) {
+        const pixel = event.pixel;
+        // Convert to OL2-style pixel position for the WMS query
+        const position = { x: pixel[0], y: pixel[1] };
+
+        // Query features at this position
+        this._queryFeaturesAtPosition(null, position);
     }
 
     /**
@@ -341,14 +366,16 @@ export default class GeometryCopyHandler {
             sourceCRS: this._map.projection
         });
 
-        // Apply to current editing feature
+        // Deactivate copy mode first (before applying geometry)
+        // so that tool restoration doesn't interfere with edit mode
+        this._drawControlWasActive = false;
+        this.deactivate();
+
+        // Apply to current editing feature (sets isEdited = true)
         this._applyGeometryToEditing(featureData.geometry);
 
         // Visual feedback
         lizMap.addMessage('Geometry copied successfully', 'info', true);
-
-        // Deactivate copy mode
-        this.deactivate();
     }
 
     /**
@@ -440,9 +467,12 @@ export default class GeometryCopyHandler {
         // Convert OL2 geometry to OL6 feature and add to digitizing draw source
         const ol6Geom = this._convertOL2ToOL6Geometry(geometry);
         if (ol6Geom) {
-            const ol6Feature = new (lizMap.ol.Feature)(ol6Geom);
+            const ol6Feature = new Feature(ol6Geom);
+            // Set the draw color so the feature renders correctly
+            ol6Feature.set('color', mainLizmap.digitizing.drawColor);
             mainLizmap.digitizing._drawSource.clear();
             mainLizmap.digitizing._drawSource.addFeature(ol6Feature);
+            mainLizmap.digitizing.isEdited = true;
             mainEventDispatcher.dispatch('digitizing.geometryChanged');
         }
     }

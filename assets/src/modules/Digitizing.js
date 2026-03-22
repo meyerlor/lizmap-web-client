@@ -126,6 +126,7 @@ export class Digitizing {
 
         this._isEdited = false;
         this._isRotate = false;
+        this._isTranslating = false;
         this._hasMeasureVisible = false;
         this._isSaved = false;
         this._isSplitting = false;
@@ -667,9 +668,16 @@ export class Digitizing {
         if (this._isEdited) {
             this._isEdited = false;
             this._selectInteraction.getFeatures().clear();
-            this._map.removeInteraction(this._translateInteraction);
             this._map.removeInteraction(this._selectInteraction);
             this._map.removeInteraction(this._modifyInteraction);
+        }
+
+        // Deactivate translate/move mode
+        if (this._isTranslating) {
+            this._isTranslating = false;
+            this._selectInteraction.getFeatures().clear();
+            this._map.removeInteraction(this._translateInteraction);
+            this._map.removeInteraction(this._selectInteraction);
         }
 
         // Deactivate rotate
@@ -988,7 +996,6 @@ export class Digitizing {
                     this.drawColor = this.featureDrawn[0].get('color');
                 }
 
-                this._map.addInteraction(this._translateInteraction);
                 this._map.addInteraction(this._selectInteraction);
                 this._map.addInteraction(this._modifyInteraction);
 
@@ -1006,7 +1013,6 @@ export class Digitizing {
                 this._isEdited = false;
                 // Clear selection
                 this._selectInteraction.getFeatures().clear();
-                this._map.removeInteraction(this._translateInteraction);
                 this._map.removeInteraction(this._selectInteraction);
                 this._map.removeInteraction(this._modifyInteraction);
 
@@ -2122,6 +2128,50 @@ export class Digitizing {
      */
     toggleScaling() {
         this.isScaling = !this.isScaling;
+    }
+
+    /**
+     * Whether translate/move mode is active
+     * @type {boolean}
+     */
+    get isTranslating() {
+        return this._isTranslating;
+    }
+
+    set isTranslating(translating) {
+        if (translating) {
+            this._deactivateAllTools();
+            this._isTranslating = true;
+
+            // Select the feature and add only Translate + Select (no Modify)
+            if (this.featureDrawn && this.featureDrawn.length === 1) {
+                this._selectInteraction.getFeatures().push(this.featureDrawn[0]);
+            }
+            this._map.addInteraction(this._selectInteraction);
+            this._map.addInteraction(this._translateInteraction);
+            mainEventDispatcher.dispatch('digitizing.translate');
+        } else {
+            this._isTranslating = false;
+            this._map.removeInteraction(this._translateInteraction);
+            this._map.removeInteraction(this._selectInteraction);
+            this._selectInteraction.getFeatures().clear();
+            mainEventDispatcher.dispatch('digitizing.translate');
+        }
+    }
+
+    /**
+     * Toggle translate/move mode
+     */
+    toggleTranslate() {
+        if (this._isTranslating) {
+            this.isTranslating = false;
+            // Return to edit mode
+            if (this.featureDrawn) {
+                this.isEdited = true;
+            }
+        } else {
+            this.isTranslating = true;
+        }
     }
 
     /**

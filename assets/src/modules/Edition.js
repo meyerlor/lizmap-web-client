@@ -108,6 +108,17 @@ export default class Edition {
     }
 
     /**
+     * Show an editing message popup for the current tool
+     * @param {string} messageKey - The lizDict key for the message
+     */
+    _showEditingMessage(messageKey) {
+        const msg = lizDict[messageKey];
+        if (!msg) return;
+        $('#lizmap-editing-message').remove();
+        lizMap.addMessage(msg, 'info', true, 10000).attr('id', 'lizmap-editing-message').css('text-align', 'center');
+    }
+
+    /**
      * Activate the digitizing module for edition
      */
     activateDigitizing() {
@@ -156,12 +167,15 @@ export default class Edition {
                 mainLizmap.digitizing.loadFeatureFromWKT(wkt, srid);
                 // Switch to edit mode since we have an existing feature
                 mainLizmap.digitizing.isEdited = true;
+                this._showEditingMessage('edition.select.modify.activate');
             } else {
                 // Activate the drawing tool for new geometry
                 mainLizmap.digitizing.toolSelected = tool;
+                this._showEditingMessage('edition.draw.activate');
             }
         } else {
             mainLizmap.digitizing.toolSelected = tool;
+            this._showEditingMessage('edition.draw.activate');
         }
 
         // Listen to geometry changes and update form
@@ -182,6 +196,7 @@ export default class Edition {
                 if (mainLizmap.digitizing.context === 'edition' && mainLizmap.digitizing.featureDrawn) {
                     if (this.layerGeometry !== 'point') {
                         mainLizmap.digitizing.isEdited = true;
+                        this._showEditingMessage('edition.select.modify.activate');
                     }
                 }
             };

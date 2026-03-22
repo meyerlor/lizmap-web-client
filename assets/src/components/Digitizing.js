@@ -65,6 +65,18 @@ export default class Digitizing extends HTMLElement {
         this._parallelPanelVisible = false;
     }
 
+    /**
+     * Show an editing message popup for the selected tool
+     * @param {string} messageKey - The lizDict key for the message
+     */
+    _showEditingMessage(messageKey) {
+        const msg = lizDict[messageKey];
+        if (!msg) return;
+        // Remove any previous editing message
+        $('#lizmap-editing-message').remove();
+        lizMap.addMessage(msg, 'info', true, 10000).attr('id', 'lizmap-editing-message').css('text-align', 'center');
+    }
+
     connectedCallback() {
 
         // Update available tools from attribute
@@ -271,7 +283,7 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-edit btn ${mainLizmap.digitizing.isEdited ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => mainLizmap.digitizing.toggleEdit()}
+                @click=${() => { mainLizmap.digitizing.toggleEdit(); if (mainLizmap.digitizing.isEdited) this._showEditingMessage('digitizing.toolbar.edit.help'); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.edit']}"
                 >
@@ -281,9 +293,21 @@ export default class Digitizing extends HTMLElement {
             </button>` : ''}
             ${!isEditionPoint ? html`<button
                 type="button"
+                class="digitizing-translate btn ${mainLizmap.digitizing.isTranslating ? 'active btn-primary' : ''}"
+                ?disabled=${!mainLizmap.digitizing.featureDrawn || (this.context === 'edition' && !mainLizmap.digitizing.isEdited && !mainLizmap.digitizing.isTranslating && !mainLizmap.digitizing.isRotate && !mainLizmap.digitizing.isScaling)}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleTranslate(); if (mainLizmap.digitizing.isTranslating) this._showEditingMessage('digitizing.toolbar.move.help'); }}
+                data-bs-toggle="tooltip"
+                data-bs-title="${lizDict['digitizing.toolbar.move']}"
+                >
+                <svg>
+                    <use href="${lizUrls.svgSprite}#move"/>
+                </svg>
+            </button>
+            <button
+                type="button"
                 class="digitizing-rotate btn ${mainLizmap.digitizing.isRotate ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleRotate(); }}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleRotate(); if (mainLizmap.digitizing.isRotate) this._showEditingMessage('digitizing.toolbar.rotate.help'); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.rotate']}"
                 >
@@ -295,7 +319,7 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-scaling btn ${mainLizmap.digitizing.isScaling ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleScaling(); }}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleScaling(); if (mainLizmap.digitizing.isScaling) this._showEditingMessage('digitizing.toolbar.scaling.help'); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.scaling']}"
                 >
@@ -307,7 +331,7 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-split btn ${mainLizmap.digitizing.isSplitting ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleSplit(); }}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleSplit(); if (mainLizmap.digitizing.isSplitting) this._showEditingMessage('digitizing.toolbar.split.help'); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.split']}"
                 >
@@ -319,7 +343,7 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-reshape btn ${mainLizmap.digitizing.isReshaping ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleReshape(); }}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleReshape(); if (mainLizmap.digitizing.isReshaping) this._showEditingMessage('digitizing.toolbar.reshape.help'); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.reshape']}"
                 >
@@ -339,6 +363,7 @@ export default class Digitizing extends HTMLElement {
                         if (mainLizmap.digitizing._context === 'edition' && mainLizmap.digitizing.featureDrawn) {
                             mainLizmap.digitizing.isEdited = true;
                         }
+                        this._showEditingMessage('digitizing.toolbar.parallel.help');
                     }
                     this._renderTemplate();
                 }}
@@ -583,6 +608,7 @@ export default class Digitizing extends HTMLElement {
                 'digitizing.reshape',
                 'digitizing.save',
                 'digitizing.split',
+                'digitizing.translate',
                 'digitizing.toolSelected',
                 'digitizing.visibility',
             ]
