@@ -62,6 +62,7 @@ export default class Digitizing extends HTMLElement {
         super();
         this._toolSelected = DigitizingAvailableTools[0];
         this._availableTools = DigitizingAvailableTools.slice(1);
+        this._parallelPanelVisible = false;
     }
 
     connectedCallback() {
@@ -250,12 +251,14 @@ export default class Digitizing extends HTMLElement {
 
             // For point layers in edition, no toolbar needed — drawing starts automatically
             if (isEditionPoint) {
-                return html`<div class="digitizing"></div>`;
+                this.style.display = 'none';
+                return html``;
             }
+            this.style.display = '';
 
             return html`
         <div class="digitizing">
-            ${toolButtonTemplate(this._availableTools, toolSelected)}
+            ${this.context !== 'edition' ? toolButtonTemplate(this._availableTools, toolSelected) : ''}
             ${this.context !== 'edition' ? html`<input
                 type="color"
                 class="digitizing-color btn"
@@ -264,7 +267,7 @@ export default class Digitizing extends HTMLElement {
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.color']}"
                 >` : ''}
-            <button
+            ${this.context !== 'edition' ? html`<button
                 type="button"
                 class="digitizing-edit btn ${mainLizmap.digitizing.isEdited ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
@@ -275,12 +278,12 @@ export default class Digitizing extends HTMLElement {
                 <svg>
                     <use href="${lizUrls.svgSprite}#edit"/>
                 </svg>
-            </button>
+            </button>` : ''}
             ${!isEditionPoint ? html`<button
                 type="button"
                 class="digitizing-rotate btn ${mainLizmap.digitizing.isRotate ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => mainLizmap.digitizing.toggleRotate()}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleRotate(); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.rotate']}"
                 >
@@ -292,7 +295,7 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-scaling btn ${mainLizmap.digitizing.isScaling ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => mainLizmap.digitizing.toggleScaling()}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleScaling(); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.scaling']}"
                 >
@@ -304,15 +307,64 @@ export default class Digitizing extends HTMLElement {
                 type="button"
                 class="digitizing-split btn ${mainLizmap.digitizing.isSplitting ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
-                @click=${() => mainLizmap.digitizing.toggleSplit()}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleSplit(); }}
                 data-bs-toggle="tooltip"
                 data-bs-title="${lizDict['digitizing.toolbar.split']}"
                 >
                 <svg>
                     <use href="${lizUrls.svgSprite}#split"/>
                 </svg>
-            </button>` : ''}
+            </button>
             <button
+                type="button"
+                class="digitizing-reshape btn ${mainLizmap.digitizing.isReshaping ? 'active btn-primary' : ''}"
+                ?disabled=${!mainLizmap.digitizing.featureDrawn}
+                @click=${() => { this._parallelPanelVisible = false; mainLizmap.digitizing.toggleReshape(); }}
+                data-bs-toggle="tooltip"
+                data-bs-title="${lizDict['digitizing.toolbar.reshape']}"
+                >
+                <svg>
+                    <use href="${lizUrls.svgSprite}#reshape"/>
+                </svg>
+            </button>
+            <button
+                type="button"
+                class="digitizing-parallel-toggle btn ${this._parallelPanelVisible ? 'active btn-primary' : ''}"
+                ?disabled=${!mainLizmap.digitizing.featureDrawn}
+                @click=${() => {
+                    this._parallelPanelVisible = !this._parallelPanelVisible;
+                    if (this._parallelPanelVisible) {
+                        // Deactivate other tools and restore edit mode
+                        mainLizmap.digitizing._deactivateAllTools();
+                        if (mainLizmap.digitizing._context === 'edition' && mainLizmap.digitizing.featureDrawn) {
+                            mainLizmap.digitizing.isEdited = true;
+                        }
+                    }
+                    this._renderTemplate();
+                }}
+                data-bs-toggle="tooltip"
+                data-bs-title="${lizDict['digitizing.toolbar.parallel']}"
+                >
+                <svg>
+                    <use href="${lizUrls.svgSprite}#parallel"/>
+                </svg>
+            </button>` : ''}
+            ${this.context === 'edition' && !isEditionPoint ? html`<lizmap-paste-geom></lizmap-paste-geom> <button
+                type="button"
+                class="digitizing-restart btn"
+                ?disabled=${!mainLizmap.digitizing.featureDrawn}
+                @click=${() => {
+                    if (!confirm(lizDict['edition.confirm.restart-drawing'])) return;
+                    mainLizmap.digitizing.eraseAll();
+                    const toolMap = { point: 'point', line: 'line', polygon: 'polygon' };
+                    mainLizmap.digitizing.toolSelected = toolMap[mainLizmap.edition?.layerGeometry] || 'point';
+                }}
+                data-bs-toggle="tooltip"
+                data-bs-title="${lizDict['edition.toolbar.redraw']}"
+                >
+                <i class="icon-refresh"></i>
+            </button>` : ''}
+            ${this.context !== 'edition' ? html`<button
                 type="button"
                 class="digitizing-erase btn ${mainLizmap.digitizing.isErasing ? 'active btn-primary' : ''}"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
@@ -324,7 +376,7 @@ export default class Digitizing extends HTMLElement {
                     <use href="${lizUrls.svgSprite}#eraser"/>
                 </svg>
             </button>
-            ${!isEditionPoint ? html`<button
+            <button
                 type="button"
                 class="digitizing-erase-all btn"
                 ?disabled=${!mainLizmap.digitizing.featureDrawn}
@@ -335,7 +387,7 @@ export default class Digitizing extends HTMLElement {
                 <svg>
                     <use href="${lizUrls.svgSprite}#eraser-all"/>
                 </svg>
-            </button>` : ''}
+            </button>
             <button
                 type="button"
                 class="digitizing-toggle-visibility btn"
@@ -345,7 +397,7 @@ export default class Digitizing extends HTMLElement {
                 data-bs-title="${lizDict['tree.button.checkbox']}"
                 >
                 <i class="icon-eye-${mainLizmap.digitizing.visibility ? 'open' : 'close'}"></i>
-            </button>
+            </button>` : ''}
             ${this.measureAvailable && !isEditionPoint ? measureButtonTemplate(
                 mainLizmap.digitizing.hasMeasureVisible,
             ) : ''}
@@ -422,6 +474,27 @@ export default class Digitizing extends HTMLElement {
             <div class="digitizing-state hide">
                 <div class="digitizing-save-state hide">${lizDict['digitizing.toolbar.save.state']}</div>
             </div>
+            <div class="digitizing-parallel-panel ${this._parallelPanelVisible ? '' : 'hide'}">
+                <div class="digitizing-parallel-controls">
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        class="digitizing-parallel-input form-control form-control-sm"
+                        placeholder="${lizDict['digitizing.toolbar.parallel.placeholder'] || 'Offset (m)'}"
+                        >
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-primary digitizing-parallel-apply"
+                        @click=${(e) => {
+                            const input = e.target.closest('.digitizing-parallel-panel').querySelector('input');
+                            const val = parseFloat(input.value.replace(',', '.'));
+                            if (!isNaN(val) && val !== 0) {
+                                mainLizmap.digitizing.createParallel(val);
+                            }
+                        }}
+                        >${lizDict['digitizing.toolbar.parallel.apply'] || 'Move drawn line'}</button>
+                </div>
+            </div>
             <div class="digitizing-constraints ${mainLizmap.digitizing.hasConstraintsPanelVisible ? '' : 'hide'}">
                 <details>
                     <summary>
@@ -461,17 +534,12 @@ export default class Digitizing extends HTMLElement {
         </div>`;
         };
 
-        render(
-            mainTemplate(
-                this.toolSelected,
-            ),
-            this,
-        );
+        this._renderTemplate = () => {
+            render(mainTemplate(this.toolSelected), this);
+            this._initTooltips();
+        };
 
-        const tooltipTriggerList = this.querySelectorAll('[data-bs-toggle="tooltip"]');
-        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl, {
-            trigger: 'hover'
-        }));
+        this._renderTemplate();
 
         mainEventDispatcher.addListener(
             () => {
@@ -484,13 +552,17 @@ export default class Digitizing extends HTMLElement {
                         this._toolSelected = DigitizingAvailableTools[0];
                     }
                 }
+                // Reset parallel panel when another tool activates
+                if (this._parallelPanelVisible && (
+                    mainLizmap.digitizing.isSplitting ||
+                    mainLizmap.digitizing.isReshaping ||
+                    mainLizmap.digitizing.isRotate ||
+                    mainLizmap.digitizing.isScaling
+                )) {
+                    this._parallelPanelVisible = false;
+                }
                 if (!this.disabled) {
-                    render(
-                        mainTemplate(
-                            this.toolSelected,
-                        ),
-                        this,
-                    );
+                    this._renderTemplate();
                 }
             },
             [
@@ -508,6 +580,7 @@ export default class Digitizing extends HTMLElement {
                 'digitizing.measure',
                 'digitizing.rotate',
                 'digitizing.scaling',
+                'digitizing.reshape',
                 'digitizing.save',
                 'digitizing.split',
                 'digitizing.toolSelected',
@@ -517,6 +590,16 @@ export default class Digitizing extends HTMLElement {
     }
 
     disconnectedCallback() {
+    }
+
+
+    _initTooltips() {
+        // Dispose existing tooltips to avoid duplicates
+        this.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            const existing = bootstrap.Tooltip.getInstance(el);
+            if (existing) existing.dispose();
+            new bootstrap.Tooltip(el, { trigger: 'hover' });
+        });
     }
 
     /**

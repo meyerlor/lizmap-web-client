@@ -13,6 +13,7 @@ import { TreeRootState } from './state/LayerTree.js';
 import { Snap } from 'ol/interaction.js';
 import { Vector as VectorSource } from 'ol/source.js';
 import { Vector as VectorLayer } from 'ol/layer.js';
+import { Circle, Fill, Stroke, Style } from 'ol/style.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
 
 /**
@@ -45,11 +46,26 @@ export default class Snapping {
         this._snapToggled = {};
         this._snapLayers = [];
 
-        // Create OL6 snap source and layer
+        // Create OL6 snap source and layer with a subtle style
         this._snapSource = new VectorSource();
         this._snapLayer = new VectorLayer({
             source: this._snapSource,
-            visible: false
+            visible: false,
+            style: new Style({
+                stroke: new Stroke({
+                    color: 'rgba(255, 140, 0, 0.5)',
+                    width: 1.5,
+                    lineDash: [6, 4]
+                }),
+                fill: new Fill({
+                    color: 'rgba(255, 140, 0, 0.05)'
+                }),
+                image: new Circle({
+                    radius: 4,
+                    fill: new Fill({ color: 'rgba(255, 140, 0, 0.4)' }),
+                    stroke: new Stroke({ color: 'rgba(255, 140, 0, 0.8)', width: 1 })
+                })
+            })
         });
         this._snapLayer.setProperties({ name: 'snaplayer' });
 
@@ -59,7 +75,7 @@ export default class Snapping {
 
         this._setSnapLayersRefreshable = () => {
             if(this._active){
-                this.snapLayersRefreshable = true;
+                this.getSnappingData();
             }
         }
 
@@ -291,7 +307,7 @@ export default class Snapping {
             this._removeSnapInteraction();
         }
 
-        // Set snap layer visibility
+        // Show snap layer when active so users can see snappable features
         this._snapLayer.setVisible(this._active);
 
         mainEventDispatcher.dispatch('snapping.active');
@@ -327,6 +343,16 @@ export default class Snapping {
         if (this._snapInteraction && mainLizmap.map) {
             mainLizmap.map.removeInteraction(this._snapInteraction);
             this._snapInteraction = null;
+        }
+    }
+
+    /**
+     * Recreate and re-add the snap interaction so it is processed after (i.e. before in OL event order)
+     * the most recently added Draw interaction. Call this after adding a new Draw interaction.
+     */
+    reorderSnapInteraction() {
+        if (this._active && mainLizmap.map && this._config) {
+            this._createSnapInteraction();
         }
     }
 

@@ -50,7 +50,7 @@ export default class PasteStoredGeom extends HTMLElement {
     connectedCallback() {
         this._template = () =>
             html`
-        <button class='btn btn-sm' data-bs-toggle="tooltip" data-bs-title='${lizDict['edition.geom.paste'] || 'Paste the geometry'}' ?disabled=${!mainLizmap.featureStorage.hasFeatures()} @click=${() => this._paste()}>
+        <button class='btn edition-tool-btn' data-bs-toggle="tooltip" data-bs-title='${lizDict['edition.geom.paste'] || 'Paste the geometry'}' ?disabled=${!mainLizmap.featureStorage.hasFeatures()} @click=${() => this._paste()}>
             <svg>
                 <use href="${lizUrls.svgSprite}#mActionEditPaste"/>
             </svg>

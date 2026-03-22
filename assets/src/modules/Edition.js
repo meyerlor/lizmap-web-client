@@ -124,6 +124,12 @@ export default class Edition {
         // Put OL6 map on top so Draw interaction receives clicks
         mainLizmap.newOlMap = true;
 
+        // Hide digitizing toolbar immediately for point layers
+        const digEl = this.digitizingElement;
+        if (digEl) {
+            digEl.style.display = this.layerGeometry === 'point' ? 'none' : '';
+        }
+
         // Force blue color for edition (like OL2 style) without persisting to localStorage
         this._savedDrawColor = mainLizmap.digitizing.drawColor;
         mainLizmap.digitizing._drawColor = '#3388ff';
@@ -170,10 +176,13 @@ export default class Edition {
         }
 
         // Auto-switch to edit mode after first feature is drawn (like OL2 behavior)
+        // For points, keep Draw active so clicking again repositions the point
         if (!this._featureDrawnListener) {
             this._featureDrawnListener = () => {
                 if (mainLizmap.digitizing.context === 'edition' && mainLizmap.digitizing.featureDrawn) {
-                    mainLizmap.digitizing.isEdited = true;
+                    if (this.layerGeometry !== 'point') {
+                        mainLizmap.digitizing.isEdited = true;
+                    }
                 }
             };
             mainEventDispatcher.addListener(
@@ -195,8 +204,8 @@ export default class Edition {
 
         // Listen to split complete to store new features for saving
         if (!this._splitCompleteListener) {
-            this._splitCompleteListener = (evt) => {
-                this._handleSplitComplete(evt);
+            this._splitCompleteListener = () => {
+                this._handleSplitComplete();
             };
             mainEventDispatcher.addListener(
                 this._splitCompleteListener,
@@ -255,9 +264,14 @@ export default class Edition {
      * @param {object} evt - The split event with features array and geometryType
      * @private
      */
-    _handleSplitComplete(evt) {
+    _handleSplitComplete() {
         if (mainLizmap.digitizing.context !== 'edition') return;
-        if (!evt.features || evt.features.length < 2) return;
+
+        // Read split results from Digitizing instance (not from event —
+        // OL Feature objects can't pass through EventDispatcher's JSON.stringify)
+        const splitFeatures = mainLizmap.digitizing._lastSplitFeatures;
+        const splitGeometryType = mainLizmap.digitizing._lastSplitGeometryType;
+        if (!splitFeatures || splitFeatures.length < 2) return;
 
         const eform = document.querySelector('#edition-form-container form');
         if (!eform) return;
@@ -266,44 +280,84 @@ export default class Edition {
         const srid = eform.querySelector('input[name="liz_srid"]')?.value;
         if (!gColumn || !srid) return;
 
-        // Determine smaller and larger features
-        let smallerFeature;
-        const f0 = evt.features[0];
-        const f1 = evt.features[1];
+        // Determine smaller and larger features by length/area
+        const f0 = splitFeatures[0];
+        const f1 = splitFeatures[1];
         const g0 = f0.getGeometry();
         const g1 = f1.getGeometry();
+        let smallerFeature, largerFeature;
 
-        if (evt.geometryType === 'line') {
+        if (splitGeometryType === 'line') {
             const len0 = getLength(g0, { projection: mainLizmap.map.getView().getProjection() });
             const len1 = getLength(g1, { projection: mainLizmap.map.getView().getProjection() });
             smallerFeature = len0 < len1 ? f0 : f1;
+            largerFeature = len0 < len1 ? f1 : f0;
         } else {
             const area0 = g0.getArea ? g0.getArea() : 0;
             const area1 = g1.getArea ? g1.getArea() : 0;
             smallerFeature = area0 < area1 ? f0 : f1;
+            largerFeature = area0 < area1 ? f1 : f0;
         }
 
-        // Serialize smaller feature to WKT
+        // Serialize smaller feature as a new record
         const smallerWkt = mainLizmap.digitizing.getFeatureAsWKT(srid, smallerFeature);
-
-        // Clone form data for the new feature (empty featureId and token for new record)
         const formData = new FormData(eform);
+
+        // Clear primary key field(s) so the server generates new PK values.
+        // Identify PKs by matching the liz_featureId value (before clearing it).
+        const originalFeatureId = formData.get('liz_featureId') || '';
+        const metaFields = new Set([
+            'liz_project', 'liz_repository', 'liz_layerId', 'liz_featureId',
+            'liz_srid', 'liz_proj4', 'liz_geometryColumn', 'liz_status',
+            'liz_future_action', '_submit', '__JFORMS_TOKEN__', gColumn
+        ]);
+        if (originalFeatureId) {
+            // For composite keys, liz_featureId uses @@ separator
+            const pkValues = originalFeatureId.includes('@@')
+                ? originalFeatureId.split('@@')
+                : [originalFeatureId];
+            for (const [key, value] of [...formData.entries()]) {
+                if (!metaFields.has(key) && pkValues.includes(value)) {
+                    formData.set(key, '');
+                }
+            }
+        }
+
         formData.set('liz_featureId', '');
         formData.set('__JFORMS_TOKEN__', '');
         if (gColumn) {
             formData.set(gColumn, smallerWkt);
         }
 
-        // Remove smaller feature from draw source, keep larger
+        // Remove the smaller feature from the draw source and select interaction
+        // (matches upstream behavior where the smaller part is moved to a separate split layer)
         mainLizmap.digitizing._drawSource.removeFeature(smallerFeature);
+        if (mainLizmap.digitizing._selectInteraction) {
+            mainLizmap.digitizing._selectInteraction.getFeatures().remove(smallerFeature);
+        }
 
-        // Trigger legacy event so edition.js can store the new feature for saving
+        // Re-enable single part constraint now that only the larger feature remains
+        mainLizmap.digitizing.singlePartGeometry = true;
+
+        // Trigger legacy event so edition.js stores the new feature for saving
         this._lizmap3.events.triggerEvent('lizmapeditionsplitcomplete', {
             newFeatureFormData: formData
         });
 
-        // Update form geometry with the remaining (larger) feature
-        mainEventDispatcher.dispatch('digitizing.geometryChanged');
+        // Set the form geometry explicitly to the larger feature
+        const largerWkt = mainLizmap.digitizing.getFeatureAsWKT(srid, largerFeature);
+        const input = eform.querySelector(`input[name="${gColumn}"]`);
+        if (input) {
+            input.value = largerWkt;
+            input.dispatchEvent(new Event('change'));
+        }
+
+        // Trigger backward compat event
+        const featureId = eform.querySelector('input[name="liz_featureId"]')?.value;
+        const layerId = eform.querySelector('input[name="liz_layerId"]')?.value;
+        lizMap.events.triggerEvent('lizmapeditiongeometryupdated', {
+            layerId, featureId, geometry: largerWkt, srid
+        });
     }
 
     /**
@@ -351,6 +405,12 @@ export default class Edition {
             mainLizmap.digitizing.toolSelected = 'deactivate';
             mainLizmap.digitizing.eraseAll();
             mainLizmap.digitizing.context = 'draw';
+
+            // Restore digitizing component visibility
+            const digEl = this.digitizingElement;
+            if (digEl) {
+                digEl.style.display = '';
+            }
 
             // Restore OL2 map on top
             mainLizmap.newOlMap = false;

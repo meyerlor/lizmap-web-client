@@ -487,10 +487,14 @@ var lizEdition = function() {
         var mapSrid = mapProjCode.replace('EPSG:','');
         $('#edition-point-coord-crs-map').html(lizDict['edition.point.coord.crs.map']+' - EPSG:'+mapSrid).val(mapSrid).show();
 
-        if ( editionLayer.geometryType == 'point' )
-            $('#edition-point-coord-add').hide();
-        else
-            $('#edition-point-coord-add').show();
+        if ( editionLayer.geometryType == 'point' ) {
+            // Hide Add/Finalize buttons and their parent form-group to avoid whitespace
+            $('#edition-point-coord-add').closest('.form-group').hide();
+            $('#edition-segment-length').parents('.form-group').addClass('hidden');
+            $('#edition-segment-angle').parents('.form-group').addClass('hidden');
+        } else {
+            $('#edition-point-coord-add').closest('.form-group').show();
+        }
 
         $('#handle-point-coord').show();
 
@@ -959,19 +963,7 @@ var lizEdition = function() {
                 }
             });
 
-            $('#edition-geomtool-restart-drawing').click(function(){
-                if ( !confirm( lizDict['edition.confirm.restart-drawing'] ) ) {
-                    return false;
-                }
-
-                // Clear digitizing and restart drawing
-                var toolMap = { point: 'point', line: 'line', polygon: 'polygon' };
-                var tool = toolMap[editionLayer.geometryType] || 'point';
-                lizMap.mainLizmap.digitizing.eraseAll();
-                lizMap.mainLizmap.digitizing.toolSelected = tool;
-            });
-
-            $('#edition-geomtool-nodetool').click(function(){
+$('#edition-geomtool-nodetool').click(function(){
                 // Node tool = edit mode in OL6 Digitizing
                 lizMap.mainLizmap.digitizing.isEdited = true;
             });
@@ -984,8 +976,7 @@ var lizEdition = function() {
                 lizMap.mainLizmap.digitizing.isRotate = true;
             });
             $('#edition-geomtool-reshape').click(function(){
-                // Reshape uses the split tool in OL6 Digitizing
-                lizMap.mainLizmap.digitizing.isSplitting = true;
+                lizMap.mainLizmap.digitizing.isReshaping = true;
             });
 
             $('#edition-geomtool-split').click(function(){
@@ -1984,7 +1975,7 @@ var lizEdition = function() {
                 if (request.status == 200) {
                     resolve(request.responseText);
                 } else {
-                    reject(new Error(`Nouveau message d'erreur`, { cause: request }));
+                    reject(new Error(`saveNewFeature failed with status ${request.status}: ${request.responseText}`, { cause: request }));
                 }
             };
             request.addEventListener("error", reject);
