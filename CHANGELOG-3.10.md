@@ -41,6 +41,7 @@ with some extra keywords: backend, tests, test, translation, funders, important
 * PHP - QgisProject: Checking that getLayerById returns null
 * Filter - JS request_params not yet defined for layer
 * Map - WMS baselayers from QGIS layers now proxy through QGIS Server
+* Filter - Switching layer in the form filter panel no longer clears the filter applied to other layers (#6772)
 
 ### Tests
 

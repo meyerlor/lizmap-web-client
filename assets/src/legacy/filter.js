@@ -138,6 +138,19 @@ var lizLayerFilterTool = function () {
                 var layerName = getConfig[0];
                 globalThis['filterConfigData'].layerName = layerName;
 
+                // Restore the filter currently applied to this layer, so switching
+                // layers in the selector keeps each layer's own filter (#6772).
+                var currentLayerFilter = [];
+                for (var fOrder in globalThis['filterConfig']) {
+                    var fItem = globalThis['filterConfig'][fOrder];
+                    if ('title' in fItem && fItem['filter'] && fItem.layerId == layerId) {
+                        currentLayerFilter.push(fItem['filter']);
+                    }
+                }
+                globalThis['filterConfigData'].filter = currentLayerFilter.length
+                    ? currentLayerFilter.join(' AND ')
+                    : undefined;
+
                 // Remove previous field inputs
                 $('div.liz-filter-field-box').remove();
 
@@ -1511,7 +1524,9 @@ var lizLayerFilterTool = function () {
 
             // Listen to the layer selector changes
             $('#liz-filter-layer-selector').change(function () {
-                deactivateFilter();
+                // Switching the layer must NOT drop the filter already applied to
+                // the previously selected layer (#6772). launchLayerFilterTool()
+                // rebuilds the form and restores the new layer's own filter.
                 globalThis['filterConfigData'].layerId = $(this).val();
                 launchLayerFilterTool($(this).val());
             });
