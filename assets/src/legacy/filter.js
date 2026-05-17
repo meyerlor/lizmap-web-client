@@ -160,14 +160,14 @@ var lizLayerFilterTool = function () {
                 // Limit dock size
                 adaptLayerFilterSize();
 
-                // Get Feature count
-                getFeatureCount();
+                // Get Feature count, reflecting the filter restored for this layer (#6772)
+                getFeatureCount(globalThis['filterConfigData'].filter);
 
                 // Set default zoom extent setZoomExtent
                 // Only if first query works
                 // Which means PHP spatialite extension is activated
                 if ($('#liz-filter-zoom').is(":visible")) {
-                    setZoomExtent();
+                    setZoomExtent(globalThis['filterConfigData'].filter);
                 }
             }
 
