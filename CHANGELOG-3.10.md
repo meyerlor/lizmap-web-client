@@ -43,6 +43,7 @@ with some extra keywords: backend, tests, test, translation, funders, important
 * Map - WMS baselayers from QGIS layers now proxy through QGIS Server
 * Filter - Switching layer in the form filter panel no longer clears the filter applied to other layers (#6772)
 * Filter - The "deactivate filter" button now clears filters on all filtered layers, not only the last one (#1551)
+* Filter - Add a per-layer filter-removal button next to each filtered layer in the legend (#1551)
 
 ### Tests
 
