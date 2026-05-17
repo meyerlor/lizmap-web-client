@@ -1259,25 +1259,38 @@ var lizLayerFilterTool = function () {
                     },
                     minidockclosed: function () {
                     },
-                    layerfeatureremovefilter: function () {
-                        var layerId = globalThis['filterConfigData'].layerId;
+                    layerfeatureremovefilter: function (e) {
+                        var currentLayerId = globalThis['filterConfigData'].layerId;
 
-                        globalThis['filterConfigData'].filter = undefined;
+                        // The event carries the name of the layer whose filter
+                        // was removed; map it to a layerId. Fall back to the
+                        // layer currently shown in the panel (#6772).
+                        var removedLayerId = currentLayerId;
+                        if (e && e.featureType
+                            && lizMap.config.layers[e.featureType]) {
+                            removedLayerId = lizMap.config.layers[e.featureType].id;
+                        }
 
-                        // We need to reset the form
-                        // Deactivate all triggers to avoid unnecessary requests
+                        // Reset the stored filter (and the widgets, if this
+                        // layer is displayed) for every field of that layer,
+                        // so switching back to it does not restore a stale
+                        // filter.
                         globalThis['filterConfigData'].deactivated = true;
                         for (var o in globalThis['filterConfig']) {
                             var field_item = globalThis['filterConfig'][o];
-                            if (!('title' in field_item) || field_item.layerId !== layerId) {
+                            if (!('title' in field_item) || field_item.layerId !== removedLayerId) {
                                 continue;
                             }
                             resetFormField(field_item.order);
                         }
                         globalThis['filterConfigData'].deactivated = false;
 
-                        // Get feature count
-                        getFeatureCount();
+                        // Refresh the panel only when the removed layer is the
+                        // one currently displayed.
+                        if (removedLayerId === currentLayerId) {
+                            globalThis['filterConfigData'].filter = undefined;
+                            getFeatureCount();
+                        }
                     }
                 });
 
