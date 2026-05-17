@@ -2731,7 +2731,10 @@ var lizAttributeTable = function() {
             function getPivotParam( typeNameId, attributeLayerConfig, typeNameDone ) {
                 var isPivot = false;
                 var pivotParam = null;
-                if( 'pivot' in attributeLayerConfig
+                // attributeLayerConfig is null for layers without an attribute
+                // table config; applyEmptyLayerFilter passes it through (#1551)
+                if( attributeLayerConfig
+                && 'pivot' in attributeLayerConfig
                 && attributeLayerConfig.pivot == 'True'
                 && attributeLayerConfig.layerId in config.relations.pivot
                 ){
