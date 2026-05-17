@@ -640,8 +640,15 @@ var lizLayerActionButtons = function() {
                 // The selection tool can filter several layers at once.
                 var filteredLayers = [];
                 for (var lName in lizMap.config.layers) {
-                    var lFilteredFeatures = lizMap.config.layers[lName]['filteredFeatures'];
-                    if (Array.isArray(lFilteredFeatures) && lFilteredFeatures.length) {
+                    var lConfig = lizMap.config.layers[lName];
+                    // Selection tool / attribute-table filter sets filteredFeatures
+                    var lFilteredFeatures = lConfig['filteredFeatures'];
+                    var hasFilteredFeatures = Array.isArray(lFilteredFeatures) && lFilteredFeatures.length;
+                    // Form filter "simple" method sets a WMS filter on request_params
+                    var rParams = lConfig['request_params'];
+                    var hasRequestFilter = rParams
+                        && (rParams['exp_filter'] || rParams['filter'] || rParams['filtertoken']);
+                    if (hasFilteredFeatures || hasRequestFilter) {
                         filteredLayers.push(lName);
                     }
                 }
