@@ -1271,8 +1271,12 @@ var lizLayerFilterTool = function () {
                             removedLayerId = lizMap.config.layers[e.featureType].id;
                         }
 
-                        // Reset the stored filter (and the widgets, if this
-                        // layer is displayed) for every field of that layer,
+                        // The form widgets only exist in the DOM for the layer
+                        // currently shown in the panel.
+                        var isDisplayedLayer = (removedLayerId === currentLayerId);
+
+                        // Clear the stored filter for every field of the
+                        // removed layer (and reset the widgets when displayed),
                         // so switching back to it does not restore a stale
                         // filter.
                         globalThis['filterConfigData'].deactivated = true;
@@ -1281,13 +1285,17 @@ var lizLayerFilterTool = function () {
                             if (!('title' in field_item) || field_item.layerId !== removedLayerId) {
                                 continue;
                             }
-                            resetFormField(field_item.order);
+                            if (isDisplayedLayer) {
+                                resetFormField(field_item.order);
+                            } else {
+                                globalThis['filterConfig'][field_item.order]['filter'] = null;
+                            }
                         }
                         globalThis['filterConfigData'].deactivated = false;
 
                         // Refresh the panel only when the removed layer is the
                         // one currently displayed.
-                        if (removedLayerId === currentLayerId) {
+                        if (isDisplayedLayer) {
                             globalThis['filterConfigData'].filter = undefined;
                             getFeatureCount();
                         }
