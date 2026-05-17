@@ -2647,6 +2647,24 @@ var lizAttributeTable = function() {
             }
 
             /**
+             * Whether at least one layer currently has an active filter.
+             * @returns {boolean}
+             */
+            function hasFilteredLayer() {
+                for ( var ln in config.layers ) {
+                    var lc = config.layers[ln];
+                    if ( Array.isArray(lc['filteredFeatures']) && lc['filteredFeatures'].length ) {
+                        return true;
+                    }
+                    var rp = lc['request_params'];
+                    if ( rp && (rp['exp_filter'] || rp['filter'] || rp['filtertoken']) ) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            /**
              *
              * @param typeNamePile
              * @param typeNameFilter
@@ -2672,7 +2690,9 @@ var lizAttributeTable = function() {
                     applyEmptyLayerFilter( typeName, typeNamePile, typeNameFilter, typeNameDone, cascade );
                 }
 
-                $('#layerActionUnfilter').toggle((lizMap.lizmapLayerFilterActive !== null));
+                // Keep the button visible while any layer is still filtered,
+                // not only when lizmapLayerFilterActive is set (#1551)
+                $('#layerActionUnfilter').toggle(hasFilteredLayer());
             }
 
             /**
