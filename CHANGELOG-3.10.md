@@ -42,6 +42,7 @@ with some extra keywords: backend, tests, test, translation, funders, important
 * Filter - JS request_params not yet defined for layer
 * Map - WMS baselayers from QGIS layers now proxy through QGIS Server
 * Filter - The "deactivate filter" button now clears filters on all filtered layers, not only the last one (#1551)
+* Filter - Add a per-layer filter-removal button next to each filtered layer in the legend (#1551)
 
 ### Tests
 
