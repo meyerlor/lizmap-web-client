@@ -1091,7 +1091,7 @@ div.popup_lizmap_dd fieldset {
 
 /* Minor adaptation for popup compared to editing form */
 div.popup_lizmap_dd {
-  font-size: 12px;
+  font-size: 1rem;
 }
 
 div.popup_lizmap_dd .control-group {
@@ -1104,7 +1104,7 @@ div.popup_lizmap_dd .control-group {
 div.popup_lizmap_dd label {
   flex: 0 0 clamp(80px, 40%, 150px) !important;
   max-width: clamp(80px, 40%, 150px);
-  font-size: 12px !important;
+  font-weight: bold;
   hyphens: auto;
   overflow-wrap: break-word;
 }
