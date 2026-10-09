@@ -1084,10 +1084,18 @@ export default class map extends olMap {
 
     refreshOL2View() {
         // This refresh OL2 view and layers
-        this._lizmap3.map.setCenter(
-            this.getView().getCenter(),
-            this.getView().getZoom()
-        );
+        const ol2Map = this._lizmap3.map;
+        // OL2 ignores a center outside its max extent, smaller than this view's one
+        const isValidLonLat = ol2Map.isValidLonLat;
+        ol2Map.isValidLonLat = lonlat => lonlat != null;
+        try {
+            ol2Map.setCenter(
+                this.getView().getCenter(),
+                this.getView().getZoom()
+            );
+        } finally {
+            ol2Map.isValidLonLat = isValidLonLat;
+        }
     }
 
     changeBaseLayer(name){

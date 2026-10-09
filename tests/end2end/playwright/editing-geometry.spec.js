@@ -82,4 +82,22 @@ test.describe('Geometry editing',
             });
 
         });
+
+        test('Drawing map follows the view outside the project extent', async ({ page }) => {
+            const project = new ProjectPage(page, 'form_edition_simple_fields');
+            await project.open();
+
+            // Outside the project extent but inside the view's one
+            const center = [153287, 4950000];
+            await page.evaluate(c => lizMap.mainLizmap.map.getView().setCenter(c), center);
+
+            const formRequest = await project.openEditingFormWithLayer('polygon_2154');
+            await formRequest.response();
+
+            // The OL2 map handles the drawing, it must be at the same place
+            await expect.poll(() => page.evaluate(() => {
+                const ol2Center = lizMap.map.getCenter();
+                return [ol2Center.lon, ol2Center.lat];
+            })).toEqual(center);
+        });
     });
