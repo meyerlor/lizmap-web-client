@@ -76,6 +76,16 @@ class QgisFormValueRelationDynamicDatasource extends \jFormsDynamicDatasource
                     }
                 }
 
+                // Type the values with the fields of the edited layer
+                $formLayer = $lproj->getLayer($form->getData('liz_layerId'));
+                if ($formLayer instanceof \qgisVectorLayer) {
+                    $values = \qgisExpressionUtils::formValuesToFeatureProperties(
+                        $values,
+                        $formLayer->getDbFieldsInfo(),
+                        \qgisExpressionUtils::getCheckboxValuesFromForm($form)
+                    );
+                }
+
                 $form_feature = array(
                     'type' => 'Feature',
                     'geometry' => $geom,

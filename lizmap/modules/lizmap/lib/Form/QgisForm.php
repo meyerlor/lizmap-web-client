@@ -283,7 +283,7 @@ class QgisForm implements QgisFormControlsInterface
                     $form_feature = array(
                         'type' => 'Feature',
                         'geometry' => $geom,
-                        'properties' => $form->getAllData(),
+                        'properties' => $this->getExpressionFeatureProperties($form->getAllData()),
                     );
                     // evaluate expression
                     $expressionT = $this->evaluateExpressionText(array($textName => $textProp['value']), $form_feature);
@@ -366,7 +366,7 @@ class QgisForm implements QgisFormControlsInterface
         $formFeature = array(
             'type' => 'Feature',
             'geometry' => $geom,
-            'properties' => $this->form->getAllData(),
+            'properties' => $this->getExpressionFeatureProperties($this->form->getAllData()),
         );
         $results = $this->evaluateExpression($expressions, $formFeature);
         $out = array();
@@ -551,7 +551,7 @@ class QgisForm implements QgisFormControlsInterface
         $form_feature = array(
             'type' => 'Feature',
             'geometry' => null,
-            'properties' => $values,
+            'properties' => $this->getExpressionFeatureProperties($values),
         );
         $results = $this->evaluateExpression(array($ctrl->ref => $ctrl->rootPathExpression), $form_feature);
         if ($results && property_exists($results, $ctrl->ref)) {
@@ -978,7 +978,7 @@ class QgisForm implements QgisFormControlsInterface
             $form_feature = array(
                 'type' => 'Feature',
                 'geometry' => $geom,
-                'properties' => $values,
+                'properties' => $this->getExpressionFeatureProperties($values),
             );
             $results = $this->evaluateExpression($constraintExpressions, $form_feature);
 
@@ -1556,7 +1556,7 @@ class QgisForm implements QgisFormControlsInterface
         $formFeature = array(
             'type' => 'Feature',
             'geometry' => null,
-            'properties' => $formData ?: array(),
+            'properties' => $this->getExpressionFeatureProperties($formData) ?: array(),
         );
         $results = $this->evaluateExpression(array($ref => $expression), $formFeature);
         if ($results && property_exists($results, $ref)) {
@@ -2212,6 +2212,30 @@ class QgisForm implements QgisFormControlsInterface
         return $name;
     }
 
+    /**
+     * Converts form values to the properties of the feature given to QGIS
+     * for expression evaluation, typed with the layer fields.
+     *
+     * @param null|array $values field name => form value
+     *
+     * @return null|array
+     */
+    protected function getExpressionFeatureProperties($values)
+    {
+        $checkboxValues = array();
+        foreach ($this->formControls as $fieldName => $formControl) {
+            if ($formControl->ctrl instanceof \jFormsControlCheckbox) {
+                $checkboxValues[$fieldName] = array($formControl->ctrl->valueOnCheck, $formControl->ctrl->valueOnUncheck);
+            }
+        }
+
+        return \qgisExpressionUtils::formValuesToFeatureProperties(
+            $values,
+            $this->dbFieldsInfo,
+            $checkboxValues
+        );
+    }
+
     public function evaluateExpression($expression, $form_feature = null)
     {
         return \qgisExpressionUtils::evaluateExpressions(
@@ -2232,7 +2256,7 @@ class QgisForm implements QgisFormControlsInterface
             $form_feature = array(
                 'type' => 'Feature',
                 'geometry' => null,
-                'properties' => $this->form->getAllData(),
+                'properties' => $this->getExpressionFeatureProperties($this->form->getAllData()),
             );
             $evaluatedStorageUrl = $this->evaluateExpression(array($fieldRef => $storageUrlFilePath), $form_feature);
 

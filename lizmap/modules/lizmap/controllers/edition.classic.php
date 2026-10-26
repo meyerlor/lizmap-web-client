@@ -711,6 +711,30 @@ class editionCtrl extends jController
             $only = array();
         }
 
+        // The browser does not send unchecked checkboxes: use their unchecked
+        // value, as the form does, and type the values like QGIS does.
+        $checkboxValues = array();
+        $formInfos = $this->project->getCacheHandler()->getEditableLayerFormCache($this->layer->getId());
+        foreach ($formInfos as $fieldName => $formInfo) {
+            if ($formInfo->getFieldEditType() !== 'CheckBox') {
+                continue;
+            }
+            $checked = $formInfo->getEditAttribute('CheckedState');
+            $unchecked = $formInfo->getEditAttribute('UncheckedState');
+            $checkboxValues[$fieldName] = array(
+                $checked === '' ? 't' : $checked,
+                $unchecked === '' ? 'f' : $unchecked,
+            );
+            if (!array_key_exists($fieldName, $values)) {
+                $values[$fieldName] = $checkboxValues[$fieldName][1];
+            }
+        }
+        $values = qgisExpressionUtils::formValuesToFeatureProperties(
+            $values,
+            $this->layer->getDbFieldsInfo(),
+            $checkboxValues
+        );
+
         $geom = ($wkt && WktTools::check($wkt)) ? WktTools::parse($wkt) : null;
         $formFeature = array(
             'type' => 'Feature',

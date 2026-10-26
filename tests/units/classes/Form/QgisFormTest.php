@@ -724,4 +724,61 @@ class QgisFormTest extends TestCase
         // 'foo' was already 'manual' — it must not be overwritten
         $this->assertEquals('manual', $form->getData('foo'));
     }
+
+    /**
+     * The form values are typed with the layer fields before the expression
+     * evaluation: a checked checkbox of a boolean field is true, not 't', and
+     * an empty number is NULL, not ''.
+     */
+    public function testFormFeaturePropertiesAreTyped(): void
+    {
+        $layer = new QgisLayerForTests();
+        $layer->setDefaultValues(array('done_at' => 'CASE WHEN "done" = 1 THEN now() END'));
+
+        $form = new dummyFormForDefaults();
+        $form->setData('done', 't');
+        $form->setData('answer', 'Ja');
+        $form->setData('count', '');
+        $form->setData('comment', '');
+
+        $dbFieldsInfo = new qgisLayerDbFieldsInfo(null);
+        $fieldTypes = array(
+            'done' => array('bool', 'boolean'),
+            'answer' => array('bool', 'boolean'),
+            'count' => array('int4', 'integer'),
+            'comment' => array('text', 'text'),
+        );
+        foreach ($fieldTypes as $name => $type) {
+            $dbFieldsInfo->dataFields[$name] = (object) array(
+                'name' => $name,
+                'type' => $type[0],
+                'unifiedType' => $type[1],
+            );
+        }
+
+        // A checkbox with custom checked / unchecked states
+        $answerControl = (new ReflectionClass(QgisFormControl::class))->newInstanceWithoutConstructor();
+        $answerControl->ctrl = new jFormsControlCheckbox('answer');
+        $answerControl->ctrl->valueOnCheck = 'Ja';
+        $answerControl->ctrl->valueOnUncheck = 'Nein';
+
+        $formObj = new QgisFormForTests();
+        $formObj->setLayer($layer);
+        $formObj->setForm($form);
+        $formObj->dbFieldsInfo = $dbFieldsInfo;
+        $formObj->setFormControls(array('answer' => $answerControl));
+
+        $formObj->evaluateDefaultExpressionsForTests(array('done_at' => 'CASE WHEN "done" = 1 THEN now() END'));
+
+        $this->assertCount(1, $formObj->evaluateExpressionCalls);
+        $this->assertSame(
+            array(
+                'done' => true,
+                'answer' => true,
+                'count' => null,
+                'comment' => '',
+            ),
+            $formObj->evaluateExpressionCalls[0]['form_feature']['properties']
+        );
+    }
 }

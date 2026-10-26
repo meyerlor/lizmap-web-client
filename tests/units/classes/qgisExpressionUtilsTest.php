@@ -169,4 +169,134 @@ class qgisExpressionUtilsTest extends TestCase
         $exp = 'intersects(buffer(@current_geometry,50), $geometry )';
         $this->assertTrue(qgisExpressionUtils::hasCurrentGeometry($exp));
     }
+
+    protected static function getDbFieldsInfo(array $types)
+    {
+        $dbFieldsInfo = new qgisLayerDbFieldsInfo(null);
+        foreach ($types as $name => $type) {
+            // jDbFieldProperties
+            $dbFieldsInfo->dataFields[$name] = (object) array(
+                'name' => $name,
+                'type' => $type[0],
+                'unifiedType' => $type[1],
+            );
+        }
+
+        return $dbFieldsInfo;
+    }
+
+    public function testFormValuesToFeatureProperties(): void
+    {
+        $dbFieldsInfo = self::getDbFieldsInfo(array(
+            'id' => array('int4', 'integer'),
+            'small' => array('int2', 'integer'),
+            'done' => array('bool', 'boolean'),
+            'checked' => array('bool', 'boolean'),
+            'unchecked' => array('bool', 'boolean'),
+            'flag' => array('boolean', 'boolean'),
+            'custom' => array('bool', 'boolean'),
+            'empty_bool' => array('bool', 'boolean'),
+            'ratio' => array('float8', 'float'),
+            'amount' => array('numeric', 'numeric'),
+            'day' => array('date', 'date'),
+            'empty_day' => array('date', 'date'),
+            'at' => array('timestamp', 'datetime'),
+            'hour' => array('time', 'time'),
+            'name' => array('text', 'text'),
+            'label' => array('varchar', 'varchar'),
+            'yes_no' => array('text', 'text'),
+            'tags' => array('_text', 'text'),
+        ));
+        $values = array(
+            'id' => '12',
+            'small' => '-3',
+            'done' => 't',
+            'checked' => 'true',
+            'unchecked' => '0',
+            'flag' => true,
+            'custom' => 'Yes',
+            'empty_bool' => '',
+            'ratio' => '0.5',
+            'amount' => '',
+            'day' => '2026-10-26',
+            'empty_day' => '',
+            'at' => '',
+            'hour' => '',
+            'name' => '',
+            'label' => 't',
+            'yes_no' => 'Yes',
+            'tags' => array('a', 'b'),
+            'liz_layerId' => 'layer_id',
+        );
+        $checkboxValues = array(
+            'custom' => array('Yes', 'No'),
+            'yes_no' => array('Yes', 'No'),
+        );
+
+        $properties = qgisExpressionUtils::formValuesToFeatureProperties($values, $dbFieldsInfo, $checkboxValues);
+
+        $this->assertSame(
+            array(
+                'id' => 12,
+                'small' => -3,
+                'done' => true,
+                'checked' => true,
+                'unchecked' => false,
+                'flag' => true,
+                'custom' => true,
+                'empty_bool' => null,
+                'ratio' => 0.5,
+                'amount' => null,
+                'day' => '2026-10-26',
+                'empty_day' => null,
+                'at' => null,
+                'hour' => null,
+                // QGIS keeps an empty string for text fields
+                'name' => '',
+                'label' => 't',
+                // A text field with a checkbox widget keeps its values
+                'yes_no' => 'Yes',
+                'tags' => array('a', 'b'),
+                // Not a layer field
+                'liz_layerId' => 'layer_id',
+            ),
+            $properties
+        );
+
+        $properties = qgisExpressionUtils::formValuesToFeatureProperties(
+            array('done' => 'f', 'custom' => 'No', 'id' => 'not a number'),
+            $dbFieldsInfo,
+            $checkboxValues
+        );
+        $this->assertSame(array('done' => false, 'custom' => false, 'id' => 'not a number'), $properties);
+
+        // Without fields info, the values are unchanged
+        $this->assertSame(array('done' => 't'), qgisExpressionUtils::formValuesToFeatureProperties(array('done' => 't'), null));
+        $this->assertNull(qgisExpressionUtils::formValuesToFeatureProperties(null, $dbFieldsInfo));
+    }
+
+    public function testGetCheckboxValuesFromForm(): void
+    {
+        $checkbox = new jFormsControlCheckbox('done');
+        $checkbox->valueOnCheck = 't';
+        $checkbox->valueOnUncheck = 'f';
+        $form = new class(array('done' => $checkbox, 'name' => new jFormsControlInput('name'))) {
+            private $controls;
+
+            public function __construct($controls)
+            {
+                $this->controls = $controls;
+            }
+
+            public function getControls()
+            {
+                return $this->controls;
+            }
+        };
+
+        $this->assertSame(
+            array('done' => array('t', 'f')),
+            qgisExpressionUtils::getCheckboxValuesFromForm($form)
+        );
+    }
 }

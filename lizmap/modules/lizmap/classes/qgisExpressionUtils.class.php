@@ -85,6 +85,147 @@ class qgisExpressionUtils
     }
 
     /**
+     * Returns the checked and unchecked values of the checkbox controls of a form.
+     *
+     * @param jFormsBase $form
+     *
+     * @return array<string, array{0: mixed, 1: mixed}> field name => [value on check, value on uncheck]
+     */
+    public static function getCheckboxValuesFromForm($form)
+    {
+        $checkboxValues = array();
+        foreach ($form->getControls() as $ref => $ctrl) {
+            if ($ctrl instanceof jFormsControlCheckbox) {
+                $checkboxValues[$ref] = array($ctrl->valueOnCheck, $ctrl->valueOnUncheck);
+            }
+        }
+
+        return $checkboxValues;
+    }
+
+    /**
+     * Converts form values to the properties of the feature given to QGIS
+     * for expression evaluation.
+     *
+     * Form values are strings, but QGIS evaluates the expression with the field
+     * types, like QGIS Desktop does in its forms: a boolean is true or false,
+     * not 't' or 'f' (any non-empty string is true), and an empty number, date
+     * or boolean input is NULL, not ''. An empty text stays an empty string.
+     *
+     * @param null|array                 $values         field name => form value
+     * @param null|qgisLayerDbFieldsInfo $dbFieldsInfo   the layer fields info
+     * @param array                      $checkboxValues field name => [value on check, value on uncheck]
+     *
+     * @return null|array field name => typed value
+     */
+    public static function formValuesToFeatureProperties($values, $dbFieldsInfo, $checkboxValues = array())
+    {
+        if (!$values || !$dbFieldsInfo) {
+            return $values;
+        }
+
+        $dataFields = (array) $dbFieldsInfo->dataFields;
+        $properties = array();
+        foreach ($values as $field => $value) {
+            $prop = $dataFields[$field] ?? null;
+            if (!is_object($prop) || !is_scalar($value)) {
+                $properties[$field] = $value;
+
+                continue;
+            }
+
+            $type = strtolower($prop->type);
+            if (array_key_exists($type, Lizmap\Form\QgisFormControl::castDataType)) {
+                $dataType = Lizmap\Form\QgisFormControl::castDataType[$type];
+            } else {
+                $dataType = $prop->unifiedType;
+            }
+
+            switch ($dataType) {
+                case 'boolean':
+                    $properties[$field] = self::formValueToBoolean(
+                        $value,
+                        $checkboxValues[$field] ?? null
+                    );
+
+                    break;
+
+                case 'integer':
+                    if ($value === '') {
+                        $value = null;
+                    } elseif (is_string($value) && preg_match('/^\s*[+-]?\d+\s*$/', $value)) {
+                        $intValue = filter_var(trim($value), FILTER_VALIDATE_INT);
+                        if ($intValue !== false) {
+                            $value = $intValue;
+                        }
+                    }
+                    $properties[$field] = $value;
+
+                    break;
+
+                case 'decimal':
+                case 'numeric':
+                case 'float':
+                    if ($value === '') {
+                        $value = null;
+                    } elseif (is_string($value) && is_numeric($value)) {
+                        $value = (float) $value;
+                    }
+                    $properties[$field] = $value;
+
+                    break;
+
+                case 'date':
+                case 'datetime':
+                case 'time':
+                    $properties[$field] = $value === '' ? null : $value;
+
+                    break;
+
+                default:
+                    $properties[$field] = $value;
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * Converts a form value of a boolean field to a boolean.
+     *
+     * @param mixed      $value          the form value
+     * @param null|array $checkboxValues [value on check, value on uncheck] of the checkbox control
+     *
+     * @return mixed true, false, null or the value if it is not a boolean value
+     */
+    protected static function formValueToBoolean($value, $checkboxValues = null)
+    {
+        if (is_bool($value) || $value === null) {
+            return $value;
+        }
+        if ($value === '') {
+            return null;
+        }
+        if ($checkboxValues !== null) {
+            if ((string) $value === (string) $checkboxValues[0]) {
+                return true;
+            }
+            if ((string) $value === (string) $checkboxValues[1]) {
+                return false;
+            }
+        }
+        $strValue = strtolower(trim((string) $value));
+        if (in_array($strValue, array('t', 'true', '1', 'on'), true)) {
+            return true;
+        }
+        if (in_array($strValue, array('f', 'false', '0', 'off'), true)) {
+            return false;
+        }
+
+        return $value;
+    }
+
+    /**
      * Returns the expression used to filter by login the layer.
      *
      * This method combines the attribute and the spatial filter expressions.
@@ -408,6 +549,14 @@ class qgisExpressionUtils
         $lproj = lizmap::getProject($repository.'~'.$project);
 
         $layer = $lproj->getLayer($form->getData('liz_layerId'));
+
+        if ($layer instanceof qgisVectorLayer) {
+            $values = self::formValuesToFeatureProperties(
+                $values,
+                $layer->getDbFieldsInfo(),
+                self::getCheckboxValuesFromForm($form)
+            );
+        }
 
         // Update expressions with filter by user
         $updatedExp = array();

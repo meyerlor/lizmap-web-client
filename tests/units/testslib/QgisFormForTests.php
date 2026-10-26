@@ -27,6 +27,11 @@ class QgisFormForTests extends Form\QgisForm
         $this->form = $form;
     }
 
+    public function setFormControls($formControls)
+    {
+        $this->formControls = $formControls;
+    }
+
     public function getDefaultValueForTests($fieldName)
     {
         return $this->getDefaultValue($fieldName);
